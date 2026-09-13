@@ -1,0 +1,70 @@
+# WindowCalc - .gitignore
+# Secrets, local databases and installed dependencies stay out of Git; the CI
+# secret-scan job is the backstop for a force-add.
+
+# Environment / secrets - NEVER commit these
+.env
+.env.*
+*.env
+secrets.json
+service-account*.json
+gcloud-key*.json
+*.pem
+*.key
+
+# Local databases - production data lives in Cloud SQL
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+.local/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Local font files (download_fonts.sh populates these)
+# Uncomment to keep fonts out of Git; commit them if deploys should use them.
+# static/fonts/
+
+# OS / editor noise
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# pytest / coverage / build
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# Uploads / local chat media
+uploads/
+local_media/
+
+# Cloud SDK cache
+.config/gcloud/
+
+# Deploy artifacts
+*.tar.gz
+*.zip

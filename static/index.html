@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WindowCalc - Impact Windows & Doors Governance Platform</title>
+  <!-- Fonts are self-hosted in static/fonts/ for offline PWA support (Alpha 9.4e) -->
+  <!-- @font-face rules are defined at the top of style.css -->
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#14B8A6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WindowCalc">
+</head>
+<body class="booting">
+  <div id="boot-splash" aria-hidden="true">
+    <div class="boot-splash-grid"></div>
+    <div class="boot-radar" aria-hidden="true">
+      <span class="boot-radar-ring ring-one"></span>
+      <span class="boot-radar-ring ring-two"></span>
+      <span class="boot-radar-ring ring-three"></span>
+      <span class="boot-radar-sweep"></span>
+      <span class="boot-radar-blip blip-one"></span>
+      <span class="boot-radar-blip blip-two"></span>
+      <span class="boot-radar-blip blip-three"></span>
+    </div>
+    <div class="boot-splash-brand">
+      <div class="boot-logo-mark">
+        <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="boot-logo-svg">
+          <rect width="32" height="32" rx="7" fill="rgba(20,184,166,0.12)"/>
+          <rect x="4" y="4" width="10" height="10" rx="2" fill="#10b981"/>
+          <rect x="18" y="4" width="10" height="10" rx="2" fill="rgba(16,185,129,0.7)"/>
+          <rect x="4" y="18" width="10" height="10" rx="2" fill="rgba(16,185,129,0.7)"/>
+          <rect x="18" y="18" width="10" height="10" rx="2" fill="rgba(16,185,129,0.4)"/>
+          <line x1="9" y1="4" x2="9" y2="14" stroke="#07111f" stroke-width="0.8" opacity="0.7"/>
+          <line x1="4" y1="9" x2="14" y2="9" stroke="#07111f" stroke-width="0.8" opacity="0.7"/>
+          <line x1="23" y1="4" x2="23" y2="14" stroke="#07111f" stroke-width="0.8" opacity="0.7"/>
+          <line x1="18" y1="9" x2="28" y2="9" stroke="#07111f" stroke-width="0.8" opacity="0.7"/>
+        </svg>
+      </div>
+      <div class="boot-logo-copy">
+        <div class="boot-logo-name">WINDOWCALC</div>
+        <div class="boot-logo-tagline">Pricing Governance Platform</div>
+      </div>
+    </div>
+    <div class="boot-splash-status" aria-hidden="true">
+      <div class="boot-status-chip">Syncing workspace state</div>
+      <div class="boot-status-chip">Rechecking governance rails</div>
+      <div class="boot-status-chip">Restoring your last screen</div>
+    </div>
+  </div>
+
+  <div id="logo-replay-prompt" class="logo-replay-prompt hidden" onclick="if(event.target===this) cancelLogoReplay()">
+    <div class="logo-replay-card" role="dialog" aria-modal="true" aria-labelledby="logo-replay-title">
+      <div class="logo-replay-eyebrow">WindowCalc Replay</div>
+      <h2 id="logo-replay-title" class="logo-replay-title">Jump back to the loading screen?</h2>
+      <p id="logo-replay-message" class="logo-replay-message">We will replay the WindowCalc startup animation for a few seconds and drop you right back into your current workspace.</p>
+      <div id="logo-replay-resume" class="logo-replay-resume hidden"></div>
+      <div class="logo-replay-actions">
+        <button class="btn btn-ghost" type="button" onclick="cancelLogoReplay()">Cancel</button>
+        <button class="btn btn-primary" type="button" onclick="confirmLogoReplay()">Continue</button>
+      </div>
+    </div>
+  </div>
+  <div id="auth-shell" class="auth-shell hidden">
+    <div class="auth-bg-grid"></div>
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-title">WINDOWCALC</div>
+        <div class="auth-subtitle">Pricing Governance Engine</div>
+      </div>
+      <form id="login-form" class="auth-form">
+        <label class="auth-label" for="login-email">Email</label>
+        <input id="login-email" class="form-input auth-input" type="email" autocomplete="username" required placeholder="you@company.com" />
+
+        <label class="auth-label" for="login-password">Password</label>
+        <input id="login-password" class="form-input auth-input" type="password" autocomplete="current-password" required placeholder="********" />
+
+        <details class="auth-details">
+          <summary>Tenant Override (optional)</summary>
+          <input id="login-tenant" class="form-input auth-input" type="text" placeholder="t-company-id" />
+        </details>
+        <div id="login-tenant-options" class="login-tenant-options hidden"></div>
+
+        <div id="login-error" class="auth-error"></div>
+        <button id="login-submit" class="btn btn-primary btn-full btn-lg" type="submit">Sign In</button>
+      </form>
+      <div class="auth-footer">Secure session - auto-expire enabled</div>
+    </div>
+  </div>
+
+  <!-- GLOBAL HEADER BAR -->
+  <header id="global-header">
+    <button class="header-left app-logo-trigger" id="app-logo-trigger" type="button" onclick="handleLogoReplayTrigger()" title="Replay WindowCalc loading screen" aria-label="Replay WindowCalc loading screen">
+      <div class="logo-mark">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-svg">
+          <defs>
+            <filter id="logo-glow">
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <rect width="32" height="32" rx="6" fill="#10b981" fill-opacity="0.1" filter="url(#logo-glow)"/>
+          <rect class="logo-rect" x="4" y="4" width="10" height="10" rx="2" fill="#10b981" style="animation-delay:0s"/>
+          <rect class="logo-rect" x="18" y="4" width="10" height="10" rx="2" fill="#10b981" fill-opacity="0.6" style="animation-delay:0.1s"/>
+          <rect class="logo-rect" x="4" y="18" width="10" height="10" rx="2" fill="#10b981" fill-opacity="0.6" style="animation-delay:0.2s"/>
+          <rect class="logo-rect" x="18" y="18" width="10" height="10" rx="2" fill="#10b981" fill-opacity="0.3" style="animation-delay:0.3s"/>
+          <!-- Window cross-bars -->
+          <line x1="9" y1="4" x2="9" y2="14" stroke="#0f1419" stroke-width="0.8" opacity="0.6"/>
+          <line x1="4" y1="9" x2="14" y2="9" stroke="#0f1419" stroke-width="0.8" opacity="0.6"/>
+          <line x1="23" y1="4" x2="23" y2="14" stroke="#0f1419" stroke-width="0.8" opacity="0.6"/>
+          <line x1="18" y1="9" x2="28" y2="9" stroke="#0f1419" stroke-width="0.8" opacity="0.6"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-name">WINDOWCALC</span>
+        <span class="logo-tagline">Governance Platform</span>
+      </div>
+    </button>
+    <div class="header-center">
+      <div class="mode-toggle" id="mode-toggle">
+        <button class="mode-btn active" data-mode="admin" id="btn-mode-admin">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1a2 2 0 100 4 2 2 0 000-4zM3 7a4 4 0 118 0H3z"/></svg>
+          ADMIN HUB
+        </button>
+        <button class="mode-btn" data-mode="field" id="btn-mode-field">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1L1 5v8h4V9h4v4h4V5L7 1z"/></svg>
+          FIELD APP
+        </button>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="impersonation-banner" class="impersonation-banner hidden">
+        <span id="impersonation-label" class="impersonation-copy">Viewing as another user</span>
+        <button class="btn btn-ghost btn-sm" id="impersonation-return-btn" type="button">Return To My Session</button>
+      </div>
+      <button class="mobile-lite-toggle" id="mobile-lite-toggle" type="button" aria-pressed="false" title="Toggle fast mobile or low-data view">
+        Lite
+      </button>
+      <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle theme">
+        <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="display:none;"><circle cx="8" cy="8" r="3"/><path d="M8 0v2M8 14v2M0 8h2M14 8h2M2.34 2.34l1.42 1.42M12.24 12.24l1.42 1.42M2.34 13.66l1.42-1.42M12.24 3.76l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14 9.2A6 6 0 016.8 2 7 7 0 1014 9.2z"/></svg>
+      </button>
+      <div class="user-session-wrap" id="user-session-wrap">
+        <div class="session-user-meta">
+          <span class="user-label">SIGNED IN</span>
+          <span id="session-user-name" class="session-user-name">Not Signed In</span>
+          <span id="session-company-name" class="session-company-name">No Company Selected</span>
+        </div>
+        <div class="tenant-switcher-wrap hidden" id="tenant-switcher-wrap">
+          <label class="tenant-switcher-label" for="tenant-switcher">Company</label>
+          <select id="tenant-switcher" class="tenant-switcher"></select>
+        </div>
+        <span id="session-role-badge" class="role-badge role-viewer">viewer</span>
+        <button class="btn btn-ghost btn-sm" id="change-password-btn" type="button">Password</button>
+        <button class="btn btn-danger btn-sm" id="logout-btn" type="button">Logout</button>
+      </div>
+      <div class="header-status">
+        <span class="status-dot" id="api-status-dot"></span>
+        <span class="status-label" id="api-status-label">CONNECTING</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <!-- CONFETTI CONTAINER -->
+  <div id="confetti-container" class="confetti-container"></div>
+
+  <!-- ==================== ADMIN HUB ==================== -->
+  <div id="admin-hub" class="app-shell">
+    <nav id="admin-sidebar">
+      <div class="sidebar-nav">
+        <button class="sidebar-item active" data-tab="dashboard">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="sidebar-item" data-tab="reports">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm2-3a1 1 0 011-1h1a1 1 0 011 1v2H5v-2zm4-4a1 1 0 011-1h1a1 1 0 011 1v6H9V9zm4-3a1 1 0 011-1h1a1 1 0 011 1v9h-3V6z"/></svg>
+          <span>Reports</span>
+        </button>
+        <button class="sidebar-item" data-tab="pipeline">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/></svg>
+          <span>Pipeline</span>
+        </button>
+        <button class="sidebar-item" data-tab="approvals">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          <span>Approvals</span>
+          <span class="badge" id="approval-badge">0</span>
+        </button>
+        <button class="sidebar-item" data-tab="chats">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2H9l-3.5 3v-3H6a2 2 0 01-2-2V4zm3 2a1 1 0 100 2h6a1 1 0 100-2H7zm0 3a1 1 0 100 2h4a1 1 0 100-2H7z"/></svg>
+          <span>Chats</span>
+        </button>
+        <button class="sidebar-item" data-tab="products">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+          <span>Products</span>
+        </button>
+        <button class="sidebar-item" data-tab="governance">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+          <span>Governance</span>
+        </button>
+        <button class="sidebar-item" data-tab="users" id="users-tab-btn">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M13 7a3 3 0 11-6 0 3 3 0 016 0zM3 16a6 6 0 1112 0H3z"/></svg>
+          <span>Users</span>
+        </button>
+        <button class="sidebar-item" data-tab="leads" id="leads-tab-btn" style="display:none;">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+          <span>Leads <span class="badge" id="leads-badge" style="background:#14B8A6;color:#07111f;"></span></span>
+        </button>
+        <button class="sidebar-item" data-tab="master-library" id="master-library-tab-btn" style="display:none;" title="Master Product Library — SysOp Only">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+          <span>Product Library</span>
+        </button>
+        <button class="sidebar-item" data-tab="system" id="system-tab-btn" style="display:none;">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.37-.84-2.94.73-2.1 2.1.54.89.06 2.04-.95 2.29-1.56.38-1.56 2.6 0 2.98 1.01.25 1.49 1.4.95 2.29-.84 1.37.73 2.94 2.1 2.1.89-.54 2.04-.06 2.29.95.38 1.56 2.6 1.56 2.98 0 .25-1.01 1.4-1.49 2.29-.95 1.37.84 2.94-.73 2.1-2.1-.54-.89-.06-2.04.95-2.29 1.56-.38 1.56-2.6 0-2.98-1.01-.25-1.49-1.4-.95-2.29.84-1.37-.73-2.94-2.1-2.1-.89.54-2.04.06-2.29-.95zM10 13a3 3 0 100-6 3 3 0 000 6z"/></svg>
+          <span>System</span>
+        </button>
+        <button class="sidebar-item" data-tab="audit">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h4a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+          <span>Audit Log</span>
+        </button>
+        <button class="sidebar-item" data-tab="pricing-intelligence" id="pricing-intel-tab-btn" style="display:none;">
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 1116 0A8 8 0 012 10zm8-6a6 6 0 100 12A6 6 0 0010 4zm1 5V7a1 1 0 10-2 0v3a1 1 0 00.553.894l2.5 1.25a1 1 0 10.894-1.788L11 9z"/></svg>
+          <span>Pricing Intel <span class="beta-badge" style="font-size:8px;">Beta</span></span>
+        </button>
+        <button class="sidebar-item sidebar-item-disabled" id="sms-twilio-btn" title="Two-way SMS/MMS — Twilio account required. Enable in Settings once configured." disabled>
+          <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h14a1 1 0 011 1v10a1 1 0 01-1 1H6l-4 4V4z"/></svg>
+          <span>SMS / Chat <span class="dev-badge">Disabled / Dev</span></span>
+        </button>
+      </div>
+      <div class="sidebar-footer">
+        <div class="sidebar-tenant" id="sidebar-tenant-name">WindowCalc</div>
+        <div class="sidebar-version" id="sidebar-version-label">Alpha 9.4d</div>
+      </div>
+    </nav>
+
+    <main id="admin-main">
+      <!-- TAB: DASHBOARD -->
+      <section id="tab-dashboard" class="admin-tab active">
+        <div class="tab-header">
+          <h1 class="tab-title">Operations Dashboard</h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" id="refresh-dashboard">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1a6 6 0 11-4.243 10.243L1.343 9.829A1 1 0 012.757 8.414l.95.95A4 4 0 107 3V5L4 2l3-3V1z"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div id="dashboard-onboarding-banner"></div>
+
+        <!-- No-tenant state — shown when user is authenticated but no company is active -->
+        <div id="no-tenant-panel" class="no-tenant-panel hidden">
+          <div class="no-tenant-icon">🏢</div>
+          <div class="no-tenant-title">No Company Selected</div>
+          <div class="no-tenant-sub">Your account isn't linked to an active company. Use the company switcher in the header, or contact your administrator to get assigned.</div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card skeleton-card">
+            <div class="stat-label">Active Quotes</div>
+            <div class="stat-value mono" id="stat-active-quotes">?</div>
+            <div class="stat-sub" id="stat-active-quotes-sub"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="stat-label">Pending Approvals</div>
+            <div class="stat-value mono amber" id="stat-pending-approvals">?</div>
+            <div class="stat-sub" id="stat-pending-approvals-sub"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="stat-label">Avg Gross Margin</div>
+            <div class="stat-value mono" id="stat-avg-margin">?</div>
+            <div class="stat-sub" id="stat-avg-margin-sub"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="stat-label">Pipeline Value</div>
+            <div class="stat-value mono green" id="stat-total-revenue">?</div>
+            <div class="stat-sub" id="stat-total-revenue-sub"></div>
+          </div>
+        </div>
+
+        <!-- Live Feed -->
+        <div class="section-header">
+          <h2 class="section-title">Live Quote Feed</h2>
+          <div class="feed-filters">
+            <select class="filter-select" id="dashboard-filter-status">
+              <option value="">All Statuses</option>
+              <option value="draft">Draft</option>
+              <option value="pending_approval">Pending Approval</option>
+              <option value="approved">Approved</option>
+              <option value="completed">Completed</option>
+              <option value="denied">Denied</option>
+            </select>
+            <select class="filter-select" id="dashboard-filter-rep">
+              <option value="">All Reps</option>
+            </select>
+            <select class="filter-select" id="dashboard-sort-by">
+              <option value="updated_at">Recently Updated</option>
+              <option value="customer_name">Customer A–Z</option>
+              <option value="total_price">Total Price</option>
+              <option value="total_cost" class="margin-only-option">Total Cost</option>
+              <option value="margin_pct" class="margin-only-option">Margin %</option>
+            </select>
+            <select class="filter-select" id="dashboard-sort-dir">
+              <option value="desc">High → Low / Newest</option>
+              <option value="asc">Low → High / Oldest</option>
+            </select>
+          </div>
+        </div>
+        <div id="quote-feed" class="quote-feed">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Loading quotes…</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: REPORTS -->
+      <section id="tab-reports" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Reporting Dashboard</h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" id="refresh-reports">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1a6 6 0 11-4.243 10.243L1.343 9.829A1 1 0 012.757 8.414l.95.95A4 4 0 107 3V5L4 2l3-3V1z"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="reports-layout">
+          <div class="report-panel">
+            <div class="section-header">
+              <h2 class="section-title">Pipeline</h2>
+            </div>
+            <div class="report-filter-row">
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-pipeline-from">From</label>
+                <input id="report-pipeline-from" class="form-input" type="date" />
+              </div>
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-pipeline-to">To</label>
+                <input id="report-pipeline-to" class="form-input" type="date" />
+              </div>
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-pipeline-rep">Rep</label>
+                <select id="report-pipeline-rep" class="filter-select">
+                  <option value="">All Reps</option>
+                </select>
+              </div>
+            </div>
+            <div id="report-pipeline-summary">
+              <div class="loading-state"><div class="spinner"></div><span>Loading pipeline report...</span></div>
+            </div>
+          </div>
+
+          <div class="report-panel">
+            <div class="section-header">
+              <h2 class="section-title">Margins</h2>
+            </div>
+            <div class="report-filter-row">
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-margins-from">From</label>
+                <input id="report-margins-from" class="form-input" type="date" />
+              </div>
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-margins-to">To</label>
+                <input id="report-margins-to" class="form-input" type="date" />
+              </div>
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-margins-rep">Rep</label>
+                <select id="report-margins-rep" class="filter-select">
+                  <option value="">All Reps</option>
+                </select>
+              </div>
+            </div>
+            <div id="report-margins-summary">
+              <div class="loading-state"><div class="spinner"></div><span>Loading margin report...</span></div>
+            </div>
+            <div class="report-chart-card">
+              <div class="report-chart-header">
+                <div class="report-chart-title">Average Margin By Rep</div>
+                <div class="report-chart-subtitle">Completed and in-flight quote margins for the selected filters.</div>
+              </div>
+              <div class="report-chart-wrap">
+                <canvas id="reports-margin-chart"></canvas>
+                <div id="reports-margin-chart-empty" class="empty-state small hidden">No rep margin data yet for this filter.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-panel">
+            <div class="section-header">
+              <h2 class="section-title">Approvals</h2>
+            </div>
+            <div class="report-filter-row">
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-approvals-from">From</label>
+                <input id="report-approvals-from" class="form-input" type="date" />
+              </div>
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-approvals-to">To</label>
+                <input id="report-approvals-to" class="form-input" type="date" />
+              </div>
+              <div class="report-filter-group">
+                <label class="report-filter-label" for="report-approvals-rep">Rep</label>
+                <select id="report-approvals-rep" class="filter-select">
+                  <option value="">All Reps</option>
+                </select>
+              </div>
+            </div>
+            <div id="report-approvals-summary">
+              <div class="loading-state"><div class="spinner"></div><span>Loading approval report...</span></div>
+            </div>
+            <div id="report-approvals-breakdown"></div>
+          </div>
+
+          <!-- MARGIN TREND -->
+          <div class="report-panel report-panel-wide">
+            <div class="section-header">
+              <h2 class="section-title">Margin Trend</h2>
+              <div class="report-filter-row" style="margin-top:0;">
+                <div class="report-filter-group">
+                  <label class="report-filter-label" for="report-trend-from">From</label>
+                  <input id="report-trend-from" class="form-input" type="date" />
+                </div>
+                <div class="report-filter-group">
+                  <label class="report-filter-label" for="report-trend-to">To</label>
+                  <input id="report-trend-to" class="form-input" type="date" />
+                </div>
+                <div class="report-filter-group">
+                  <label class="report-filter-label" for="report-trend-rep">Rep</label>
+                  <select id="report-trend-rep" class="filter-select">
+                    <option value="">All Reps</option>
+                  </select>
+                </div>
+                <div class="report-filter-group" style="align-self:flex-end;">
+                  <button class="btn btn-ghost btn-sm" onclick="loadMarginTrendReport()">Apply</button>
+                </div>
+              </div>
+            </div>
+            <div id="report-trend-summary"></div>
+            <div class="report-chart-card" style="margin-top:14px;">
+              <div class="report-chart-header">
+                <div class="report-chart-title">Avg Margin % by Month</div>
+                <div class="report-chart-subtitle">Monthly average margin across all filtered quotes.</div>
+              </div>
+              <div class="report-chart-wrap">
+                <canvas id="reports-trend-chart"></canvas>
+                <div id="reports-trend-chart-empty" class="empty-state small hidden">No trend data for this filter.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REP PERFORMANCE -->
+          <div class="report-panel report-panel-wide">
+            <div class="section-header">
+              <h2 class="section-title">Rep Performance</h2>
+              <div class="report-filter-row" style="margin-top:0;">
+                <div class="report-filter-group">
+                  <label class="report-filter-label" for="report-rep-from">From</label>
+                  <input id="report-rep-from" class="form-input" type="date" />
+                </div>
+                <div class="report-filter-group">
+                  <label class="report-filter-label" for="report-rep-to">To</label>
+                  <input id="report-rep-to" class="form-input" type="date" />
+                </div>
+                <div class="report-filter-group" style="align-self:flex-end;">
+                  <button class="btn btn-ghost btn-sm" onclick="loadRepPerformanceReport()">Apply</button>
+                </div>
+              </div>
+            </div>
+            <div id="report-rep-summary"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB: PIPELINE (Tier 6) -->
+      <section id="tab-pipeline" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Pipeline Kanban</h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" onclick="renderPipelineView(el('pipeline-board-container'))">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1a6 6 0 11-4.243 10.243L1.343 9.829A1 1 0 012.757 8.414l.95.95A4 4 0 107 3V5L4 2l3-3V1z"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div id="pipeline-board-container">
+          <div class="loading-state"><div class="spinner"></div><span>Loading pipeline...</span></div>
+        </div>
+      </section>
+
+      <!-- TAB: APPROVALS -->
+      <section id="tab-approvals" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Approval Queue</h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" id="refresh-approvals">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1a6 6 0 11-4.243 10.243L1.343 9.829A1 1 0 012.757 8.414l.95.95A4 4 0 107 3V5L4 2l3-3V1z"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div id="approval-queue-pending" class="approval-queue">
+          <div class="loading-state"><div class="spinner"></div><span>Loading approvals…</span></div>
+        </div>
+        <div class="section-header" style="margin-top:32px;">
+          <h2 class="section-title">Decision History</h2>
+        </div>
+        <div id="approval-queue-history" class="approval-queue approval-history">
+          <div class="empty-state small">No recent decisions.</div>
+        </div>
+      </section>
+
+      <!-- TAB: CHATS -->
+      <section id="tab-chats" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Job Chat Inbox</h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" id="refresh-chat-threads" onclick="loadChatThreadsTab()">Refresh</button>
+          </div>
+        </div>
+        <div id="chat-threads-content">
+          <div class="loading-state"><div class="spinner"></div><span>Loading job chats...</span></div>
+        </div>
+      </section>
+
+      <!-- TAB: PRODUCTS -->
+      <section id="tab-products" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Product Mastersheet</h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" id="browse-library-btn" onclick="openLibraryBrowser()" style="display:none;">
+              📚 Browse Library
+            </button>
+            <button class="btn btn-ghost btn-sm" id="ai-pricing-studio-btn" style="display:none;"
+                    onclick="openAIPricingStudio()">
+              ✦ AI Pricing Studio <span class="beta-badge">Beta</span>
+            </button>
+          </div>
+        </div>
+        <div class="products-container">
+          <div id="products-table-wrap">
+            <div class="loading-state"><div class="spinner"></div><span>Loading products…</span></div>
+          </div>
+          <div class="product-sub-section">
+            <div class="subsection-tabs">
+              <button class="subsection-tab active" data-subsection="glass">Glass Options</button>
+              <button class="subsection-tab" data-subsection="colors">Frame Colors</button>
+              <button class="subsection-tab" data-subsection="complexity">Complexity Items</button>
+              <button class="subsection-tab" data-subsection="consumables">Consumables</button>
+              <button class="subsection-tab" data-subsection="assembly">Assembly Templates</button>
+            </div>
+            <div id="subsection-glass" class="subsection-content active">
+              <div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>
+            </div>
+            <div id="subsection-colors" class="subsection-content">
+              <div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>
+            </div>
+            <div id="subsection-complexity" class="subsection-content">
+              <div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>
+            </div>
+            <div id="subsection-consumables" class="subsection-content">
+              <div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>
+            </div>
+            <div id="subsection-assembly" class="subsection-content">
+              <div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: GOVERNANCE -->
+      <section id="tab-governance" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Governance Settings</h1>
+          <div class="tab-actions">
+            <button class="btn btn-primary" id="save-governance">Save Changes</button>
+          </div>
+        </div>
+        <div id="governance-content">
+          <div class="loading-state"><div class="spinner"></div><span>Loading governance settings…</span></div>
+        </div>
+      </section>
+
+            <!-- TAB: USERS -->
+      <section id="tab-users" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">User Management</h1>
+          <div class="tab-actions">
+            <button class="btn btn-primary btn-sm" id="add-user-btn">+ Add User</button>
+          </div>
+        </div>
+        <div id="users-tab-content">
+          <div class="loading-state"><div class="spinner"></div><span>Loading users...</span></div>
+        </div>
+      </section>
+
+      <!-- TAB: SYSTEM -->
+      <section id="tab-system" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">System Console</h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" id="refresh-system-btn">Refresh</button>
+          </div>
+        </div>
+        <div id="system-console-content">
+          <div class="loading-state"><div class="spinner"></div><span>Loading system console...</span></div>
+        </div>
+      </section>
+
+      <!-- TAB: AUDIT LOG -->
+      <section id="tab-audit" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Audit Log</h1>
+          <div class="tab-actions">
+            <select class="filter-select" id="audit-filter-type">
+              <option value="">All Events</option>
+              <option value="approval_requested">Approval Requested</option>
+              <option value="approval_granted">Approval Granted</option>
+              <option value="approval_denied">Approval Denied</option>
+              <option value="governance_updated">Governance Updated</option>
+              <option value="product_updated">Product Updated</option>
+              <option value="quote_created">Quote Created</option>
+            </select>
+          </div>
+        </div>
+        <div id="audit-log-content">
+          <div class="loading-state"><div class="spinner"></div><span>Loading audit log…</span></div>
+        </div>
+      </section>
+
+      <!-- TAB: MASTER PRODUCT LIBRARY (SysOp only) -->
+      <section id="tab-master-library" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Master Product Library <span class="beta-badge" style="background:rgba(20,184,166,.15);color:#14B8A6;border:1px solid rgba(20,184,166,.3);">SysOp</span></h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" id="ml-requests-btn" onclick="loadMasterLibrary('requests')" style="position:relative;">
+              Requests <span id="ml-requests-badge" class="badge" style="background:#F59E0B;color:#07111f;display:none;margin-left:4px;"></span>
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="loadMasterLibrary()">↺ Refresh</button>
+            <button class="btn btn-primary btn-sm" onclick="openMasterProductForm()">+ Add Product</button>
+          </div>
+        </div>
+
+        <!-- Filter strip -->
+        <div class="ml-filters">
+          <select class="filter-select" id="ml-filter-mfr" onchange="loadMasterLibrary()">
+            <option value="">All Manufacturers</option>
+          </select>
+          <select class="filter-select" id="ml-filter-series" onchange="loadMasterLibrary()">
+            <option value="">All Series</option>
+          </select>
+          <select class="filter-select" id="ml-filter-type" onchange="loadMasterLibrary()">
+            <option value="">All Types</option>
+            <option value="single_hung">Single Hung</option>
+            <option value="horizontal_roller">Horizontal Roller</option>
+            <option value="fixed">Fixed Window</option>
+            <option value="casement">Casement</option>
+            <option value="sliding_glass_door">Sliding Glass Door</option>
+            <option value="entry_door">Entry Door</option>
+            <option value="french_door">French Door</option>
+            <option value="bifold_door">Bi-Fold Door</option>
+          </select>
+          <select class="filter-select" id="ml-filter-active" onchange="loadMasterLibrary()">
+            <option value="1">Active Only</option>
+            <option value="0">Inactive</option>
+            <option value="all">All</option>
+          </select>
+          <input type="search" class="form-input" id="ml-search" placeholder="Search model, NOA, name…" oninput="mlSearchDebounced()" style="max-width:240px;"/>
+        </div>
+
+        <!-- Main product table -->
+        <div id="ml-table-wrap"></div>
+
+        <!-- Edit / Add Product Form Drawer -->
+        <div id="ml-product-drawer" class="leads-drawer hidden">
+          <div class="leads-drawer-overlay" onclick="closeMasterProductForm()"></div>
+          <div class="leads-drawer-panel" style="width:min(680px,95vw)">
+            <div class="leads-drawer-header">
+              <div>
+                <div id="ml-form-title" class="leads-drawer-title">Add Master Product</div>
+                <div class="leads-drawer-sub">All fields editable. MSRP is admin-only — never shown to tenants.</div>
+              </div>
+              <button class="modal-close" onclick="closeMasterProductForm()">✕</button>
+            </div>
+            <div class="leads-drawer-body">
+              <input type="hidden" id="ml-form-id"/>
+              <div class="ml-form-grid">
+                <div class="ml-form-row-2">
+                  <div class="form-group"><label>Manufacturer *</label><input class="form-input" id="ml-f-mfr" placeholder="ESWindows" list="ml-mfr-list"/><datalist id="ml-mfr-list"><option>ESWindows</option><option>PGT Windows + Doors</option><option>CGI Windows</option><option>WinDoor</option></datalist></div>
+                  <div class="form-group"><label>Series *</label><input class="form-input" id="ml-f-series" placeholder="Prestige"/><datalist id="ml-series-list"></datalist></div>
+                </div>
+                <div class="ml-form-row-2">
+                  <div class="form-group"><label>Model Number *</label><input class="form-input" id="ml-f-model" placeholder="ES-H340"/></div>
+                  <div class="form-group"><label>Product Name *</label><input class="form-input" id="ml-f-name" placeholder="Single Hung LMI"/></div>
+                </div>
+                <div class="ml-form-row-2">
+                  <div class="form-group"><label>Opening Type *</label>
+                    <select class="form-input" id="ml-f-type">
+                      <option value="single_hung">Single Hung</option>
+                      <option value="horizontal_roller">Horizontal Roller</option>
+                      <option value="fixed">Fixed Window</option>
+                      <option value="casement">Casement</option>
+                      <option value="sliding_glass_door">Sliding Glass Door</option>
+                      <option value="entry_door">Entry Door</option>
+                      <option value="french_door">French Door</option>
+                      <option value="bifold_door">Bi-Fold Door</option>
+                    </select>
+                  </div>
+                  <div class="form-group"><label>Missile Impact</label>
+                    <select class="form-input" id="ml-f-missile">
+                      <option value="LMI">LMI — Large Missile</option>
+                      <option value="SMI">SMI — Small Missile</option>
+                      <option value="LMI/SMI">LMI &amp; SMI</option>
+                      <option value="Non-Impact">Non-Impact</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="ml-form-row-4">
+                  <div class="form-group"><label>Min Width (in)</label><input class="form-input" id="ml-f-minw" type="number" step="0.125" placeholder="12"/></div>
+                  <div class="form-group"><label>Max Width (in) *</label><input class="form-input" id="ml-f-maxw" type="number" step="0.125" placeholder="53.125"/></div>
+                  <div class="form-group"><label>Min Height (in)</label><input class="form-input" id="ml-f-minh" type="number" step="0.125" placeholder="12"/></div>
+                  <div class="form-group"><label>Max Height (in) *</label><input class="form-input" id="ml-f-maxh" type="number" step="0.125" placeholder="84"/></div>
+                </div>
+                <div class="ml-form-row-4">
+                  <div class="form-group"><label>DP+ (EXT)</label><input class="form-input" id="ml-f-dpp" type="number" step="0.1" placeholder="80"/></div>
+                  <div class="form-group"><label>DP- (INT)</label><input class="form-input" id="ml-f-dpn" type="number" step="0.1" placeholder="90"/></div>
+                  <div class="form-group"><label>Frame Depth</label><input class="form-input" id="ml-f-fd" placeholder="2.784&quot;"/></div>
+                  <div class="form-group"><label>Lead Time (wks)</label><input class="form-input" id="ml-f-lt" type="number" placeholder="5"/></div>
+                </div>
+                <div class="ml-form-row-2">
+                  <div class="form-group"><label>NOA Number</label><input class="form-input" id="ml-f-noa" placeholder="25-0728.07"/></div>
+                  <div class="form-group"><label>NOA Expires</label><input class="form-input" id="ml-f-exp" type="date"/></div>
+                </div>
+                <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                  <input type="checkbox" id="ml-f-hvhz" style="accent-color:#14B8A6;width:16px;height:16px;" checked/>
+                  <label for="ml-f-hvhz" style="font-size:.875rem;color:var(--text-primary);font-weight:600;cursor:pointer;">HVHZ Approved (Miami-Dade HVHZ compliant)</label>
+                </div>
+                <div class="form-group">
+                  <label>Description / Notes</label>
+                  <textarea class="form-input" id="ml-f-desc" rows="2" placeholder="Brief product notes for admin reference…" style="resize:vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>Spec Sheet URL</label>
+                  <input class="form-input" id="ml-f-spec" placeholder="https://…"/>
+                </div>
+                <div class="form-group">
+                  <label style="color:#F59E0B;">🔒 Base MSRP (Admin Only — Never shown to tenants)</label>
+                  <input class="form-input" id="ml-f-msrp" type="number" step="0.01" placeholder="Leave blank if unknown" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04);"/>
+                </div>
+                <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                  <input type="checkbox" id="ml-f-active" style="accent-color:#14B8A6;width:16px;height:16px;" checked/>
+                  <label for="ml-f-active" style="font-size:.875rem;color:var(--text-primary);font-weight:600;cursor:pointer;">Active (visible and sharable)</label>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:4px;">
+                <button class="btn btn-primary" style="flex:1;" onclick="saveMasterProduct()">Save Product</button>
+                <button class="btn btn-ghost" onclick="closeMasterProductForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Share Drawer -->
+        <div id="ml-share-drawer" class="leads-drawer hidden">
+          <div class="leads-drawer-overlay" onclick="closeMasterShareDrawer()"></div>
+          <div class="leads-drawer-panel" style="width:min(500px,95vw)">
+            <div class="leads-drawer-header">
+              <div>
+                <div id="ml-share-title" class="leads-drawer-title">Share Product</div>
+                <div class="leads-drawer-sub">Select tenants to give access to this product.</div>
+              </div>
+              <button class="modal-close" onclick="closeMasterShareDrawer()">✕</button>
+            </div>
+            <div class="leads-drawer-body">
+              <input type="hidden" id="ml-share-product-id"/>
+              <div id="ml-share-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:360px;overflow-y:auto;"></div>
+              <div class="form-group">
+                <label>Note (optional)</label>
+                <input class="form-input" id="ml-share-note" placeholder="Reason for sharing, onboarding note…"/>
+              </div>
+              <div style="display:flex;gap:10px;">
+                <button class="btn btn-primary" style="flex:1;" onclick="saveMasterShares()">Save Shares</button>
+                <button class="btn btn-ghost" onclick="closeMasterShareDrawer()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Requests Panel -->
+        <div id="ml-requests-wrap" style="display:none;"></div>
+      </section>
+
+      <!-- TAB: LEADS -->
+      <section id="tab-leads" class="admin-tab">
+        <div class="tab-header">
+          <h1 class="tab-title">Lead Tracker</h1>
+          <div class="tab-actions">
+            <button class="btn btn-ghost btn-sm" id="leads-export-btn" onclick="exportLeadsCSV()">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1v8M4 6l3 3 3-3M2 11h10"/></svg>
+              Export CSV
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="loadLeadsTab()">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1a6 6 0 11-4.243 10.243L1.343 9.829A1 1 0 012.757 8.414l.95.95A4 4 0 107 3V5L4 2l3-3V1z"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Status filter strip -->
+        <div class="leads-filter-strip" id="leads-filter-strip">
+          <button class="leads-filter-btn active" data-status="" onclick="leadsFilterStatus(this,'')">All <span id="lfc-all"></span></button>
+          <button class="leads-filter-btn" data-status="new" onclick="leadsFilterStatus(this,'new')">🆕 New <span id="lfc-new" class="leads-count-badge"></span></button>
+          <button class="leads-filter-btn" data-status="contacted" onclick="leadsFilterStatus(this,'contacted')">👀 Contacted <span id="lfc-contacted"></span></button>
+          <button class="leads-filter-btn" data-status="in_progress" onclick="leadsFilterStatus(this,'in_progress')">⚡ In Progress <span id="lfc-in_progress"></span></button>
+          <button class="leads-filter-btn" data-status="quoted" onclick="leadsFilterStatus(this,'quoted')">📊 Quoted <span id="lfc-quoted"></span></button>
+          <button class="leads-filter-btn" data-status="closed_won" onclick="leadsFilterStatus(this,'closed_won')">🏆 Closed/Won <span id="lfc-closed_won"></span></button>
+          <button class="leads-filter-btn" data-status="cold" onclick="leadsFilterStatus(this,'cold')">🧊 Cold <span id="lfc-cold"></span></button>
+          <button class="leads-filter-btn" data-status="custom" onclick="leadsFilterStatus(this,'custom')">🏷️ Tagged <span id="lfc-custom"></span></button>
+        </div>
+
+        <!-- Search + sort row -->
+        <div class="leads-toolbar">
+          <input type="text" inputmode="search" name="lead-search-query" class="form-input" id="leads-search" placeholder="Search name, email, company…" oninput="leadsSearch()" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" autocapitalize="none" spellcheck="false" style="max-width:300px;"/>
+          <select class="filter-select" id="leads-sort" onchange="loadLeadsTab()">
+            <option value="created_at">Newest First</option>
+            <option value="last_activity_at">Recent Activity</option>
+            <option value="score">Highest Score</option>
+            <option value="name">Name A–Z</option>
+            <option value="company">Company A–Z</option>
+          </select>
+          <label class="leads-star-filter">
+            <input type="checkbox" id="leads-starred-only" onchange="loadLeadsTab()"/> ★ Starred only
+          </label>
+        </div>
+
+        <!-- Table -->
+        <div id="leads-table-wrap"></div>
+
+        <!-- Drawer -->
+        <div id="leads-drawer" class="leads-drawer hidden">
+          <div class="leads-drawer-overlay" onclick="closeLeadDrawer()"></div>
+          <div class="leads-drawer-panel">
+            <div class="leads-drawer-header">
+              <div>
+                <div id="ld-name" class="leads-drawer-title"></div>
+                <div id="ld-company" class="leads-drawer-sub"></div>
+              </div>
+              <button class="modal-close" onclick="closeLeadDrawer()">✕</button>
+            </div>
+            <div class="leads-drawer-body">
+
+              <!-- Status + actions row -->
+              <div class="ld-actions-row">
+                <select class="leads-status-select" id="ld-status-select" onchange="leadQuickUpdate('status',this.value)">
+                  <option value="new">🆕 New</option>
+                  <option value="contacted">👀 Contacted</option>
+                  <option value="in_progress">⚡ In Progress</option>
+                  <option value="quoted">📊 Quoted</option>
+                  <option value="closed_won">🏆 Closed / Won</option>
+                  <option value="cold">🧊 Cold</option>
+                  <option value="custom">🏷️ Custom Tag</option>
+                </select>
+                <button class="btn btn-ghost btn-sm" id="ld-star-btn" onclick="leadToggleStar()">☆ Star</button>
+              </div>
+
+              <!-- Custom tag row (shown when status = custom) -->
+              <div id="ld-tag-row" class="ld-tag-row hidden">
+                <input type="text" class="form-input" id="ld-custom-tag" placeholder="Enter custom tag…" style="font-size:12px;"/>
+                <button class="btn btn-ghost btn-sm" onclick="leadSaveTag()">Save Tag</button>
+              </div>
+
+              <!-- Follow-up date -->
+              <div class="ld-field-row">
+                <span class="ld-field-label">Follow-Up Date</span>
+                <input type="date" class="form-input ld-date-input" id="ld-followup" onchange="leadQuickUpdate('follow_up_date',this.value)"/>
+              </div>
+
+              <!-- Lead info grid -->
+              <div class="ld-info-grid" id="ld-info-grid"></div>
+
+              <!-- Score + source -->
+              <div class="ld-score-row" id="ld-score-row"></div>
+
+              <!-- Notes -->
+              <div class="ld-section-label">Internal Notes</div>
+              <div id="ld-notes-list" class="ld-notes-list"></div>
+              <div class="ld-note-input-row">
+                <textarea class="form-input ld-note-textarea" id="ld-note-input" placeholder="Add a private note…" rows="2"></textarea>
+                <button class="btn btn-primary btn-sm" onclick="leadAddNote()">Add Note</button>
+              </div>
+
+              <!-- Activity log -->
+              <div class="ld-section-label" style="margin-top:20px;">Activity</div>
+              <div id="ld-activity-list" class="ld-activity-list"></div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: PRICING INTELLIGENCE (Alpha 9.4) -->
+      <section id="tab-pricing-intelligence" class="admin-tab">
+        <div class="pi-shell">
+          <!-- Filters sidebar -->
+          <aside class="pi-filters">
+            <div class="pi-filters-header">Filters</div>
+            <div class="pi-filter-group">
+              <label class="pi-filter-label">Date Range</label>
+              <input type="date" id="pi-from-date" class="form-input pi-date-input" />
+              <input type="date" id="pi-to-date"   class="form-input pi-date-input" style="margin-top:5px;" />
+            </div>
+            <div class="pi-filter-group">
+              <label class="pi-filter-label">Brand</label>
+              <select id="pi-filter-brand" class="filter-select">
+                <option value="">All Brands</option>
+              </select>
+            </div>
+            <div class="pi-filter-group">
+              <label class="pi-filter-label">Product Line</label>
+              <select id="pi-filter-line" class="filter-select">
+                <option value="">All Lines</option>
+                <option value="Prestige">Prestige</option>
+                <option value="Elite">Elite</option>
+                <option value="Multimax">Multimax</option>
+              </select>
+            </div>
+            <div class="pi-filter-group">
+              <label class="pi-filter-label">Rep</label>
+              <select id="pi-filter-rep" class="filter-select">
+                <option value="">All Reps</option>
+              </select>
+            </div>
+            <div class="pi-filter-group">
+              <label class="pi-filter-label" style="cursor:pointer;">
+                <input type="checkbox" id="pi-approved-only" style="margin-right:6px;" />
+                Approved / Completed only
+              </label>
+              <label class="pi-filter-label" style="cursor:pointer;margin-top:8px;">
+                <input type="checkbox" id="pi-discounted-only" style="margin-right:6px;" />
+                Discounted quotes only
+              </label>
+            </div>
+            <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;" onclick="applyPricingIntelFilters()">Apply Filters</button>
+            <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px;" onclick="resetPricingIntelFilters()">Reset</button>
+          </aside>
+
+          <!-- Main content -->
+          <div class="pi-content">
+            <!-- Tab strip -->
+            <div class="pi-tab-strip">
+              <button class="pi-tab active" data-pitab="overview"    onclick="setPricingIntelligenceTab('overview')">Overview</button>
+              <button class="pi-tab" data-pitab="brand-models"       onclick="setPricingIntelligenceTab('brand-models')">Brand Models</button>
+              <button class="pi-tab" data-pitab="categories"         onclick="setPricingIntelligenceTab('categories')">Product Categories</button>
+              <button class="pi-tab" data-pitab="brand-comparison"   onclick="setPricingIntelligenceTab('brand-comparison')">Brand Comparison</button>
+              <button class="pi-tab" data-pitab="rep-behavior"       onclick="setPricingIntelligenceTab('rep-behavior')">Rep Behavior</button>
+              <button class="pi-tab" data-pitab="ai-studio"          onclick="setPricingIntelligenceTab('ai-studio')">AI Pricing Studio</button>
+            </div>
+
+            <!-- OVERVIEW -->
+            <div id="pi-pane-overview" class="pi-pane active">
+              <div id="pi-overview-cards" class="pricing-dashboard-cards">
+                <div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><span>Loading…</span></div>
+              </div>
+              <div class="pi-charts-row" id="pi-overview-charts"></div>
+            </div>
+
+            <!-- BRAND MODELS -->
+            <div id="pi-pane-brand-models" class="pi-pane hidden">
+              <div class="pi-table-wrap">
+                <table class="pricing-analytics-table" id="pi-brand-table">
+                  <thead><tr>
+                    <th>Brand</th><th>Model</th><th>Line</th><th>Type</th>
+                    <th>Openings</th><th>Avg Price</th><th>Avg Cost</th>
+                    <th>Avg Margin</th><th>Avg Discount</th><th>Approval Rate</th>
+                  </tr></thead>
+                  <tbody id="pi-brand-tbody"><tr><td colspan="10" class="loading-cell"><div class="spinner"></div></td></tr></tbody>
+                </table>
+              </div>
+              <!-- Model detail slide-in -->
+              <div id="pi-model-detail" class="pricing-detail-view hidden"></div>
+            </div>
+
+            <!-- PRODUCT CATEGORIES -->
+            <div id="pi-pane-categories" class="pi-pane hidden">
+              <div class="pi-table-wrap">
+                <table class="pricing-analytics-table" id="pi-cat-table">
+                  <thead><tr>
+                    <th>Category</th><th>Openings</th><th>Avg Price</th>
+                    <th>Avg Margin</th><th>Avg Discount</th><th>Approval Rate</th>
+                  </tr></thead>
+                  <tbody id="pi-cat-tbody"><tr><td colspan="6" class="loading-cell"><div class="spinner"></div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- BRAND COMPARISON -->
+            <div id="pi-pane-brand-comparison" class="pi-pane hidden">
+              <div class="pi-table-wrap">
+                <table class="pricing-analytics-table" id="pi-comp-table">
+                  <thead><tr>
+                    <th>Opening Type</th><th>Brand</th><th>Openings</th>
+                    <th>Avg Margin</th><th>Avg Price</th><th>Avg Discount</th>
+                  </tr></thead>
+                  <tbody id="pi-comp-tbody"><tr><td colspan="6" class="loading-cell"><div class="spinner"></div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- REP BEHAVIOR -->
+            <div id="pi-pane-rep-behavior" class="pi-pane hidden">
+              <div class="pi-table-wrap">
+                <table class="pricing-analytics-table sortable-table" id="pi-rep-table">
+                  <thead><tr>
+                    <th>Rep</th>
+                    <th class="sortable" data-col="quote_count">Quotes</th>
+                    <th class="sortable" data-col="opening_count">Openings</th>
+                    <th class="sortable" data-col="avg_margin_pct">Avg Margin</th>
+                    <th class="sortable" data-col="avg_discount_pct">Avg Discount</th>
+                    <th class="sortable" data-col="approval_requests">Approvals</th>
+                    <th class="sortable" data-col="below_floor_rate">Below Floor %</th>
+                    <th class="sortable" data-col="close_rate">Close Rate</th>
+                  </tr></thead>
+                  <tbody id="pi-rep-tbody"><tr><td colspan="8" class="loading-cell"><div class="spinner"></div></td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- AI PRICING STUDIO (passthrough) -->
+            <div id="pi-pane-ai-studio" class="pi-pane hidden">
+              <div style="padding:40px;text-align:center;">
+                <div style="font-size:32px;margin-bottom:16px;">✦</div>
+                <div style="font-size:16px;font-weight:700;margin-bottom:8px;">AI Pricing Studio</div>
+                <div style="font-size:13px;color:var(--text-secondary);margin-bottom:24px;">Apply historical insights directly to your product pricing.</div>
+                <button class="btn btn-primary" onclick="openAIPricingStudio()">Open AI Pricing Studio →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="marketing-landing" class="hidden">
+
+    <!-- ── WC NAV ─────────────────────────────────────────── -->
+    <nav class="wc-nav" id="wc-nav">
+        <div class="wc-nav-inner">
+          <a href="#" class="wc-nav-logo" onclick="handleLogoReplayTrigger(); return false;" title="Replay WindowCalc loading screen">
+            <span class="wc-nav-logo-mark" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" rx="7" fill="rgba(20,184,166,0.12)"/>
+                <rect x="4" y="4" width="10" height="10" rx="2" fill="#10b981"/>
+                <rect x="18" y="4" width="10" height="10" rx="2" fill="rgba(16,185,129,0.7)"/>
+                <rect x="4" y="18" width="10" height="10" rx="2" fill="rgba(16,185,129,0.7)"/>
+                <rect x="18" y="18" width="10" height="10" rx="2" fill="rgba(16,185,129,0.4)"/>
+                <line x1="9" y1="4" x2="9" y2="14" stroke="#07111f" stroke-width="0.8" opacity="0.7"/>
+                <line x1="4" y1="9" x2="14" y2="9" stroke="#07111f" stroke-width="0.8" opacity="0.7"/>
+                <line x1="23" y1="4" x2="23" y2="14" stroke="#07111f" stroke-width="0.8" opacity="0.7"/>
+                <line x1="18" y1="9" x2="28" y2="9" stroke="#07111f" stroke-width="0.8" opacity="0.7"/>
+              </svg>
+            </span>
+            <span class="wc-nav-logo-text">Window<span>Calc</span></span>
+          </a>
+          <ul class="wc-nav-links">
+          <li><a href="#wc-features">Features</a></li>
+          <li><a href="#wc-governance">Governance</a></li>
+          <li><a href="#wc-cpa">For CPAs</a></li>
+          <li><a href="#wc-pricing">Pricing</a></li>
+          <li><a href="#wc-demo">Request Demo</a></li>
+        </ul>
+        <div class="wc-nav-cta">
+          <button class="wc-btn-ghost-sm" onclick="showLoginFromMarketing()">Sign In</button>
+          <a href="#wc-demo" class="wc-btn-teal-sm">Request Demo</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ── HERO ──────────────────────────────────────────── -->
+    <section class="wc-hero" id="wc-top">
+      <div class="wc-hero-bg"></div>
+      <div class="wc-hero-grid"></div>
+      <div class="wc-container">
+        <div class="wc-hero-badge">
+          <span class="wc-badge-dot"></span>
+          Alpha 9.4e &nbsp;·&nbsp; Free &amp; open source
+        </div>
+        <h1 class="wc-h1">Your reps are discounting<br/><span class="wc-accent">your company out of business.</span></h1>
+        <p class="wc-hero-sub">WindowCalc is the only quoting platform purpose-built for impact window and door dealers — with real-time margin governance, AI pricing intelligence, and a full audit trail that your CPA will actually appreciate.</p>
+        <div class="wc-hero-ctas">
+          <a href="#wc-demo" class="wc-btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1a6 6 0 100 12A6 6 0 008 2zm.75 3.5v3.25l2.25 1.3-.5.87-2.5-1.45V6.5h.75z"/></svg>
+            Request a Demo
+          </a>
+          <a href="#wc-features" class="wc-btn-secondary">See How It Works →</a>
+        </div>
+        <div class="wc-hero-stats">
+          <div class="wc-stat"><span class="wc-stat-v wc-teal" data-wc-count="50" data-wc-suffix="K+">0</span><span class="wc-stat-l">Annual margin recovered per dealer</span></div>
+          <div class="wc-stat"><span class="wc-stat-v" data-wc-count="23">0</span><span class="wc-stat-l">Granular permissions per user</span></div>
+          <div class="wc-stat"><span class="wc-stat-v wc-teal" data-wc-count="3">0</span><span class="wc-stat-l">Governance tiers enforced</span></div>
+          <div class="wc-stat"><span class="wc-stat-v" data-wc-count="100" data-wc-suffix="%">0</span><span class="wc-stat-l">Server-side price enforcement</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MARQUEE ─────────────────────────────────────────── -->
+    <div class="wc-marquee-wrap">
+      <div class="wc-marquee-inner">
+        <span class="wc-marquee-label">South Florida Dealers ·</span>
+        <span class="wc-marquee-item">BROWARD COUNTY</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">MIAMI-DADE COUNTY</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">PALM BEACH COUNTY</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">HVHZ CERTIFIED</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">NOA COMPLIANT</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">AI PRICING STUDIO</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">CPA READY</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">MULTI-TENANT SAAS</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-label">South Florida Dealers ·</span>
+        <span class="wc-marquee-item">BROWARD COUNTY</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">MIAMI-DADE COUNTY</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">PALM BEACH COUNTY</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">HVHZ CERTIFIED</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">NOA COMPLIANT</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">AI PRICING STUDIO</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">CPA READY</span><span class="wc-dot">✦</span>
+        <span class="wc-marquee-item">MULTI-TENANT SAAS</span><span class="wc-dot">✦</span>
+      </div>
+    </div>
+
+    <!-- ── PROBLEM ─────────────────────────────────────────── -->
+    <section class="wc-section wc-section-mid" id="wc-problem">
+      <div class="wc-container">
+        <div class="wc-section-header wc-center">
+          <span class="wc-label">The Industry Problem</span>
+          <h2 class="wc-h2">Six ways your dealership is losing money right now</h2>
+          <p class="wc-body-lg">These are daily realities — not hypothetical risks — for every impact window company operating without a governed platform.</p>
+        </div>
+        <div class="wc-problem-grid">
+          <div class="wc-problem-card"><div class="wc-prob-icon">💸</div><h3>Margin Hemorrhage</h3><p>Reps discount in driveways from memory. Owners discover margin loss weeks after the job is sold. The average 10-person team loses $50K–$200K per year.</p></div>
+          <div class="wc-problem-card"><div class="wc-prob-icon">📊</div><h3>Quote Chaos</h3><p>Spreadsheets, handwritten notes, and tribal knowledge driving your most important financial decisions. One person owns the master spreadsheet. What happens when they leave?</p></div>
+          <div class="wc-problem-card"><div class="wc-prob-icon">⚠️</div><h3>Zero Guardrails</h3><p>Reps quote blind. No visibility into floor margins or approval thresholds. Every deal is a guess. And the house always loses more than it knows.</p></div>
+          <div class="wc-problem-card"><div class="wc-prob-icon">📋</div><h3>Manual Compliance</h3><p>NOA, DP ratings, and HVHZ requirements tracked manually across spreadsheets and memory. One human error is a failed inspection and a reopened job at your expense.</p></div>
+          <div class="wc-problem-card"><div class="wc-prob-icon">💬</div><h3>Scattered Communications</h3><p>Customer updates via personal texts. Internal notes in email threads. Job info split across four different apps. Your team is coordinating by accident.</p></div>
+          <div class="wc-problem-card"><div class="wc-prob-icon">🔍</div><h3>Zero Financial Visibility</h3><p>No real-time pipeline view. No margin by rep. No approval trail your CPA could follow. Your business is running on vibes instead of data.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── HOW IT WORKS ────────────────────────────────────── -->
+    <section class="wc-section" id="wc-howitworks">
+      <div class="wc-container">
+        <div class="wc-section-header wc-center">
+          <span class="wc-label">How It Works</span>
+          <h2 class="wc-h2">Three steps to a governed, intelligent operation</h2>
+          <p class="wc-body-lg">From raw product data to a fully governed quoting operation — in days, not months.</p>
+        </div>
+        <div class="wc-steps-grid">
+          <div class="wc-step">
+            <div class="wc-step-num">01</div>
+            <h3>Configure Once</h3>
+            <ul class="wc-step-list">
+              <li>Upload product catalog with DP ratings and NOA numbers</li>
+              <li>Set glass, frame, complexity, and consumable options</li>
+              <li>Define margin floors, max discounts, and approval triggers</li>
+              <li>Create users with role-based permission sets</li>
+              <li>Guided onboarding checklist walks your team through setup</li>
+            </ul>
+            <div class="wc-step-arrow">→</div>
+          </div>
+          <div class="wc-step">
+            <div class="wc-step-num">02</div>
+            <h3>Quote in the Field</h3>
+            <ul class="wc-step-list">
+              <li>Enter address — county property data auto-enriched</li>
+              <li>Add openings: product, dimensions, glass, frame, complexity</li>
+              <li>System prices in real time with live governance check</li>
+              <li>Rep sees exactly where they stand vs. floor before submitting</li>
+              <li>Below-floor quotes route to approval queue automatically</li>
+            </ul>
+            <div class="wc-step-arrow">→</div>
+          </div>
+          <div class="wc-step">
+            <div class="wc-step-num">03</div>
+            <h3>Own the Intelligence</h3>
+            <ul class="wc-step-list">
+              <li>All closed quotes feed Pricing Intelligence Console automatically</li>
+              <li>Analyze brand, model, rep, and territory performance</li>
+              <li>AI Pricing Studio generates catalog recommendations from your data</li>
+              <li>Apply AI recommendations — close the pricing feedback loop</li>
+              <li>Audit log captures every governance decision permanently</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FEATURE TABS ────────────────────────────────────── -->
+    <section class="wc-section wc-section-mid" id="wc-features">
+      <div class="wc-container">
+        <div class="wc-section-header wc-center">
+          <span class="wc-label">Platform Features</span>
+          <h2 class="wc-h2">Every layer of your operation — governed</h2>
+        </div>
+        <div class="wc-tab-strip">
+          <button class="wc-tab-btn active" onclick="wcSwitchTab(this,'wc-tab-dashboard')">Dashboard</button>
+          <button class="wc-tab-btn" onclick="wcSwitchTab(this,'wc-tab-quoting')">Quote Builder</button>
+          <button class="wc-tab-btn" onclick="wcSwitchTab(this,'wc-tab-approvals')">Approvals</button>
+          <button class="wc-tab-btn" onclick="wcSwitchTab(this,'wc-tab-reports')">Reports</button>
+          <button class="wc-tab-btn" onclick="wcSwitchTab(this,'wc-tab-ai')">AI Studio</button>
+        </div>
+        <!-- DASHBOARD -->
+        <div class="wc-tab-pane active" id="wc-tab-dashboard">
+          <div class="wc-feat-text">
+            <span class="wc-label">Operations Dashboard</span>
+            <h2 class="wc-h2">Real-time visibility — every quote, every margin, every rep</h2>
+            <p>Owners and managers get a live feed of the entire pipeline — sorted, filtered, and color-coded by margin health. No more end-of-month surprises.</p>
+            <div class="wc-feat-list">
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Live quote feed</strong> — sorted by margin, customer, status, or price</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Avg Gross Margin % KPI</strong> — labeled correctly for your CPA</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Pipeline value</strong> — committed revenue vs. open pipeline</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Pending approvals badge</strong> — queue alerts in real time</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Rep filter</strong> — isolate any rep's performance instantly</div></div>
+            </div>
+          </div>
+          <div class="wc-mock">
+            <div class="wc-mock-bar"><div class="wc-mock-dot" style="background:#EF4444"></div><div class="wc-mock-dot" style="background:#F59E0B"></div><div class="wc-mock-dot" style="background:#10B981"></div><span class="wc-mock-title">WindowCalc — Dashboard</span></div>
+            <div class="wc-mock-body">
+              <div class="wc-mock-stats">
+                <div class="wc-ms"><span class="wc-ms-v">24</span><span class="wc-ms-l">Active Quotes</span></div>
+                <div class="wc-ms"><span class="wc-ms-v" style="color:#F59E0B">3</span><span class="wc-ms-l">Pending Approval</span></div>
+                <div class="wc-ms"><span class="wc-ms-v" style="color:#14B8A6">31.4%</span><span class="wc-ms-l">Avg Gross Margin</span></div>
+                <div class="wc-ms"><span class="wc-ms-v" style="color:#10B981">$284K</span><span class="wc-ms-l">Pipeline Value</span></div>
+              </div>
+              <div class="wc-mock-div"></div>
+              <div class="wc-mock-label">Live Quote Feed</div>
+              <div class="wc-mock-row"><span class="wc-ml">Martinez, A. · 1420 NW 54th</span><span class="wc-mbadge wc-bg">✓ 34.2%</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">Thompson, R. · 887 SW 3rd</span><span class="wc-mbadge wc-ba">⚡ 27.1%</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">Williams, J. · 2240 Coral Way</span><span class="wc-mbadge wc-br">↓ 21.3%</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">Davis, K. · 445 Brickell Ave</span><span class="wc-mbadge wc-bg">✓ 38.5%</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">Rodriguez, M. · 1105 Flagler Dr</span><span class="wc-mbadge wc-bb">Draft</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- QUOTE BUILDER -->
+        <div class="wc-tab-pane" id="wc-tab-quoting">
+          <div class="wc-feat-text">
+            <span class="wc-label">Quote Builder</span>
+            <h2 class="wc-h2">From property address to governed proposal in minutes</h2>
+            <p>The Field App is built for speed. Real-time pricing feedback, compliance checks, and live margin visibility — all before leaving the customer's driveway.</p>
+            <div class="wc-feat-list">
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>County property enrichment</strong> — owner, folio, year built on intake</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Real-time DP validation</strong> — non-compliant products flagged instantly</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Live Gross Margin ribbon</strong> — updates with every selection</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Cost breakdown panel</strong> — visible to managers/owners, hidden from reps</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Multipart assemblies</strong> — 3-panel sliders with mull bars included</div></div>
+            </div>
+          </div>
+          <div class="wc-mock">
+            <div class="wc-mock-bar"><div class="wc-mock-dot" style="background:#EF4444"></div><div class="wc-mock-dot" style="background:#F59E0B"></div><div class="wc-mock-dot" style="background:#10B981"></div><span class="wc-mock-title">WindowCalc — Opening Builder</span></div>
+            <div class="wc-mock-body">
+              <div class="wc-mock-ribbon">
+                <div class="wc-rib-item"><div class="wc-rib-lbl">Opening Price</div><div class="wc-rib-val">$1,714</div></div>
+                <div class="wc-rib-item"><div class="wc-rib-lbl">Gross Margin %</div><div class="wc-rib-val" style="color:#14B8A6">30.0%</div></div>
+                <div class="wc-rib-item"><div class="wc-rib-lbl">Markup %</div><div class="wc-rib-val" style="color:#94a3b8">42.9%</div></div>
+                <div class="wc-rib-item"><div class="wc-rib-lbl">Quote Margin</div><div class="wc-rib-val" style="color:#10B981">31.4%</div></div>
+              </div>
+              <div class="wc-mock-row"><span class="wc-ml">Product</span><span class="wc-mv">ES-H340 Single Hung</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">Dimensions</span><span class="wc-mv">26″ × 50″</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">Glass</span><span class="wc-mv">Impact Laminated</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">Frame</span><span class="wc-mv">Bronze 2604</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">DP Rating</span><span class="wc-mbadge wc-bg">✓ DP-50 PASSED</span></div>
+              <div class="wc-mock-div"></div>
+              <div class="wc-mock-row" style="background:rgba(20,184,166,.06);border-color:rgba(20,184,166,.2)"><span class="wc-ml">Opening Price</span><span class="wc-mv" style="color:#14B8A6;font-size:.9rem">$1,714.29</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- APPROVALS -->
+        <div class="wc-tab-pane" id="wc-tab-approvals">
+          <div class="wc-feat-text">
+            <span class="wc-label">Approval Workflow</span>
+            <h2 class="wc-h2">No deal moves below floor without a named authorization</h2>
+            <p>The moment a quote falls below the rep's margin floor, the system locks proposal generation and routes the request to the correct approver — automatically, with full context.</p>
+            <div class="wc-feat-list">
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Automatic routing</strong> — rep floor triggers manager, manager floor triggers owner</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Named decision record</strong> — approver, timestamp, reason — permanently logged</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Rep coaching notes</strong> — denial reasons feed back to rep for training</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Two-person rule</strong> — rep who prices cannot approve their own exception</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Immutable record</strong> — approvals cannot be deleted or backdated</div></div>
+            </div>
+          </div>
+          <div class="wc-mock">
+            <div class="wc-mock-bar"><div class="wc-mock-dot" style="background:#EF4444"></div><div class="wc-mock-dot" style="background:#F59E0B"></div><div class="wc-mock-dot" style="background:#10B981"></div><span class="wc-mock-title">WindowCalc — Approval Queue</span></div>
+            <div class="wc-mock-body">
+              <div class="wc-mock-row" style="background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2)">
+                <div><div style="font-size:.8rem;color:#fff;font-weight:600;">Rodriguez, M. · 1105 Flagler Dr</div><div style="font-size:.7rem;color:#94a3b8;margin-top:2px;">Rep: Carlos V. · 2 min ago</div></div>
+                <span class="wc-mbadge wc-ba">⚡ PENDING</span>
+              </div>
+              <div style="padding:14px;background:rgba(255,255,255,.01);border:1px solid #1a2d45;border-radius:7px;margin:10px 0;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div><div class="wc-mock-label">Current Margin</div><div style="color:#EF4444;font-size:1.1rem;font-weight:700;">24.1%</div></div>
+                  <div><div class="wc-mock-label">Floor Margin</div><div style="font-size:1.1rem;font-weight:700;">28.0%</div></div>
+                </div>
+                <div style="margin-top:10px;padding:8px;background:rgba(20,184,166,.05);border-radius:5px;border:1px solid rgba(20,184,166,.15);font-size:.8rem;color:#94a3b8;">"Competitor quoted $1,400. Customer needs decision today."</div>
+              </div>
+              <div style="display:flex;gap:10px;">
+                <div style="flex:1;padding:10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:6px;text-align:center;font-size:.8rem;font-weight:700;color:#10B981;">✓ Approve</div>
+                <div style="flex:1;padding:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;text-align:center;font-size:.8rem;font-weight:700;color:#EF4444;">✗ Deny</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- REPORTS -->
+        <div class="wc-tab-pane" id="wc-tab-reports">
+          <div class="wc-feat-text">
+            <span class="wc-label">Reports &amp; Analytics</span>
+            <h2 class="wc-h2">P&amp;L-ready reports your accountant can actually read</h2>
+            <p>Six live report modules with revenue recognition staging, gross margin analysis, rep performance ranking, and approval audit trails — filterable by date and rep.</p>
+            <div class="wc-feat-list">
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Pipeline report</strong> — Draft (unbooked), Approved (committed), Completed (invoice-ready)</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Gross margin trend</strong> — monthly chart, spot issues before they hurt</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Rep performance leaderboard</strong> — margin, close rate, below-floor rate per rep</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Approvals report</strong> — full exception authorization trail</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>CSV export</strong> — everything exportable for your accountant</div></div>
+            </div>
+          </div>
+          <div class="wc-mock">
+            <div class="wc-mock-bar"><div class="wc-mock-dot" style="background:#EF4444"></div><div class="wc-mock-dot" style="background:#F59E0B"></div><div class="wc-mock-dot" style="background:#10B981"></div><span class="wc-mock-title">WindowCalc — Reports</span></div>
+            <div class="wc-mock-body">
+              <div class="wc-mock-label" style="margin-bottom:10px;">Pipeline — Revenue Recognition</div>
+              <div class="wc-mock-stats" style="grid-template-columns:repeat(3,1fr)">
+                <div class="wc-ms"><span class="wc-ms-v" style="color:#94a3b8">$42K</span><span class="wc-ms-l">Draft — Unbooked</span></div>
+                <div class="wc-ms"><span class="wc-ms-v" style="color:#F59E0B">$118K</span><span class="wc-ms-l">Approved — Committed</span></div>
+                <div class="wc-ms"><span class="wc-ms-v" style="color:#10B981">$284K</span><span class="wc-ms-l">Completed — Earned</span></div>
+              </div>
+              <div class="wc-mock-div"></div>
+              <div class="wc-mock-label" style="margin-bottom:10px;">Rep Performance</div>
+              <div class="wc-mock-row"><div style="display:flex;align-items:center;gap:8px;"><span style="background:#F59E0B;color:#07111f;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;">1</span><span class="wc-ml">Sarah K.</span></div><span style="color:#14B8A6;font-size:.75rem;">34.8% avg · 87% close</span></div>
+              <div class="wc-mock-row"><div style="display:flex;align-items:center;gap:8px;"><span style="background:rgba(255,255,255,.12);color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;">2</span><span class="wc-ml">Marcus T.</span></div><span style="color:#94a3b8;font-size:.75rem;">31.2% avg · 74% close</span></div>
+              <div class="wc-mock-row"><div style="display:flex;align-items:center;gap:8px;"><span style="background:rgba(255,255,255,.08);color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;">3</span><span class="wc-ml">Carlos V.</span></div><span style="color:#F59E0B;font-size:.75rem;">27.3% avg — ⚠ 23% below-floor</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- AI -->
+        <div class="wc-tab-pane" id="wc-tab-ai">
+          <div class="wc-feat-text">
+            <span class="wc-label">AI Pricing Studio</span>
+            <h2 class="wc-h2">Your own data, turned into a pricing strategy</h2>
+            <p>The AI Pricing Studio analyzes your completed quote history and generates pricing profiles built from what your company has actually sold — not generic market benchmarks.</p>
+            <div class="wc-feat-list">
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Build profiles from history</strong> — select brand, model line, or category</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>AI recommendations</strong> — price adjustments with margin analysis</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Refine with prompts</strong> — "Improve Prestige margins by 3% without losing close rate"</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>One-click apply</strong> — push recommendations to live catalog instantly</div></div>
+              <div class="wc-feat-item"><div class="wc-chk">✓</div><div><strong>Pricing Intelligence Console</strong> — brand, rep, category analytics across all history</div></div>
+            </div>
+          </div>
+          <div class="wc-mock">
+            <div class="wc-mock-bar"><div class="wc-mock-dot" style="background:#EF4444"></div><div class="wc-mock-dot" style="background:#F59E0B"></div><div class="wc-mock-dot" style="background:#10B981"></div><span class="wc-mock-title">WindowCalc — AI Pricing Studio</span></div>
+            <div class="wc-mock-body">
+              <div style="background:rgba(20,184,166,.06);border:1px solid rgba(20,184,166,.2);border-radius:7px;padding:12px;margin-bottom:12px;">
+                <div class="wc-mock-label" style="color:#14B8A6;margin-bottom:6px;">✦ AI Profile — ES Prestige Line</div>
+                <div style="color:#e2e8f0;font-size:.8rem;">Based on 847 historical openings, current avg margin is 28.4%. Recommend +4.2% pricing to target 32% gross margin.</div>
+              </div>
+              <div class="wc-mock-row"><span class="wc-ml">ES-H340 SH · Current</span><span class="wc-mv">$1,640 avg</span></div>
+              <div class="wc-mock-row" style="background:rgba(20,184,166,.04);border-color:rgba(20,184,166,.2)"><span class="wc-ml">ES-H340 SH · AI Suggested</span><span class="wc-mv" style="color:#14B8A6">$1,709 (+4.2%)</span></div>
+              <div class="wc-mock-row"><span class="wc-ml">Slider 6068 · Current</span><span class="wc-mv">$2,280 avg</span></div>
+              <div class="wc-mock-row" style="background:rgba(20,184,166,.04);border-color:rgba(20,184,166,.2)"><span class="wc-ml">Slider 6068 · AI Suggested</span><span class="wc-mv" style="color:#14B8A6">$2,376 (+4.2%)</span></div>
+              <div style="margin-top:12px;padding:10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;text-align:center;font-size:.8rem;font-weight:700;color:#14B8A6;cursor:pointer;">✓ Apply Profile to Live Catalog</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── GOVERNANCE ──────────────────────────────────────── -->
+    <section class="wc-section" id="wc-governance">
+      <div class="wc-container">
+        <div class="wc-grid-2">
+          <div>
+            <span class="wc-label">Governance Engine</span>
+            <h2 class="wc-h2">Rules that enforce themselves. Every time.</h2>
+            <p style="margin-bottom:28px;color:#94a3b8;">The governance engine is the competitive moat of WindowCalc. It embeds ownership's pricing rules directly into the quoting workflow — so compliance isn't a conversation, it's a constraint.</p>
+            <div class="wc-tier-stack">
+              <div class="wc-tier wc-tier-owner"><span class="wc-tier-lbl">🔐 OWNER FLOOR</span><span class="wc-tier-desc">The absolute minimum. System blocks quote regardless of approval status. Set by owner only.</span><div><span class="wc-tier-floor" style="color:#14B8A6">15%</span><span class="wc-tier-sub">example minimum</span></div></div>
+              <div class="wc-tier wc-tier-mgr"><span class="wc-tier-lbl">⚡ MANAGER FLOOR</span><span class="wc-tier-desc">Managers can approve down to this level. Below it escalates to owner automatically.</span><div><span class="wc-tier-floor" style="color:#F59E0B">22%</span><span class="wc-tier-sub">example floor</span></div></div>
+              <div class="wc-tier wc-tier-rep"><span class="wc-tier-lbl">🎯 REP FLOOR</span><span class="wc-tier-desc">Minimum reps can quote without triggering an approval request.</span><div><span class="wc-tier-floor">28%</span><span class="wc-tier-sub">example floor</span></div></div>
+            </div>
+          </div>
+          <div>
+            <h3 style="color:#fff;margin-bottom:20px;font-size:1.1rem;">The Approval Flow</h3>
+            <div class="wc-flow">
+              <div class="wc-flow-step"><div class="wc-flow-num">1</div><div class="wc-flow-txt"><strong>Quote drops below rep floor</strong> — system flags, proposal blocked</div></div>
+              <div class="wc-flow-step"><div class="wc-flow-num">2</div><div class="wc-flow-txt"><strong>Rep submits approval request</strong> — logged with margin gap and note</div></div>
+              <div class="wc-flow-step"><div class="wc-flow-num">3</div><div class="wc-flow-txt"><strong>Manager reviews</strong> — approve or deny with reason</div></div>
+              <div class="wc-flow-step"><div class="wc-flow-num">4</div><div class="wc-flow-txt"><strong>If below manager floor</strong> — escalates to owner automatically</div></div>
+              <div class="wc-flow-step"><div class="wc-flow-num">5</div><div class="wc-flow-txt"><strong>Decision recorded permanently</strong> — immutable, attributed, timestamped</div></div>
+            </div>
+            <div class="wc-callout" style="margin-top:24px;">
+              <div class="wc-callout-label">Segregation of Duties</div>
+              <p style="font-size:.875rem;color:#e2e8f0;margin:0;">The rep who prices a job can never approve their own exception. This is a recognized internal control standard — hard-coded into the system.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CPA SECTION ─────────────────────────────────────── -->
+    <section class="wc-section wc-section-mid" id="wc-cpa">
+      <div class="wc-container">
+        <div class="wc-section-header wc-center">
+          <span class="wc-label">For the CPA</span>
+          <h2 class="wc-h2">Financial controls your auditor will recognize</h2>
+          <p class="wc-body-lg">WindowCalc is not just a quoting tool. It is a financial control system that generates proposals. Show this section to your accountant on day one.</p>
+        </div>
+        <div class="wc-cpa-grid">
+          <div class="wc-cpa-card"><span class="wc-cpa-icon">⚖️</span><h3>Gross Margin % — Not Markup</h3><p>All reporting uses Gross Margin % — the correct P&amp;L metric. Markup % is shown separately for those who need it. Your CPA will know the difference immediately.</p></div>
+          <div class="wc-cpa-card"><span class="wc-cpa-icon">🔒</span><h3>Frozen Proposal Snapshots</h3><p>Once a proposal is delivered, prices are locked in an immutable snapshot. WindowCalc cannot retroactively change what a customer was shown. Clean invoice reconciliation.</p></div>
+          <div class="wc-cpa-card"><span class="wc-cpa-icon">📜</span><h3>Immutable Audit Trail</h3><p>Every pricing change, approval, and user action is permanently logged with timestamp and user identity. Cannot be deleted. The data your auditor would ask for in a revenue control review.</p></div>
+          <div class="wc-cpa-card"><span class="wc-cpa-icon">🏗️</span><h3>Revenue Recognition Stages</h3><p>Quote statuses map to P&amp;L stages: Draft (unbooked), Approved (committed — bookable when work begins), Completed (earned — invoice-ready). Structured for ASC 606.</p></div>
+          <div class="wc-cpa-card"><span class="wc-cpa-icon">🚧</span><h3>Cost Visibility by Role</h3><p>Sales reps never see cost data — enforced server-side. Owners and managers see full cost breakdown. This is role-based access control applied to financial data.</p></div>
+          <div class="wc-cpa-card"><span class="wc-cpa-icon">👥</span><h3>Two-Person Authorization</h3><p>No single employee controls pricing AND approves exceptions. This is the COSO-recognized two-person rule built as a hard constraint — not a policy that can be ignored.</p></div>
+        </div>
+        <div class="wc-callout wc-callout-wide">
+          <div class="wc-callout-label">CPA Summary</div>
+          <p style="color:#e2e8f0;font-size:.9375rem;line-height:1.7;margin:0;">"Every pricing exception requires a named decision-maker with a timestamp. No job can be sold below margin floor without a named manager or owner creating an explicit approval record. <strong style="color:#14B8A6;">This is a documented authorization trail that any auditor can follow from quote to decision to outcome.</strong>"</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ROI CALCULATOR ──────────────────────────────────── -->
+    <section class="wc-section" id="wc-roi">
+      <div class="wc-container">
+        <div class="wc-section-header wc-center">
+          <span class="wc-label">ROI Calculator</span>
+          <h2 class="wc-h2">How much are you losing right now?</h2>
+          <p class="wc-body-lg">Adjust the sliders to estimate your annual margin loss from uncontrolled field discounting.</p>
+        </div>
+        <div class="wc-roi-card">
+          <div class="wc-roi-grid">
+            <div class="wc-roi-inputs">
+              <div class="wc-roi-field"><label>Number of Sales Reps</label><input type="range" id="wc-r-reps" min="1" max="30" value="5" oninput="wcCalcROI()"/><div class="wc-roi-vals"><span>1</span><span id="wc-r-reps-v" class="wc-roi-val">5 reps</span><span>30</span></div></div>
+              <div class="wc-roi-field"><label>Avg Quotes Per Rep / Month</label><input type="range" id="wc-r-quotes" min="2" max="25" value="8" oninput="wcCalcROI()"/><div class="wc-roi-vals"><span>2</span><span id="wc-r-quotes-v" class="wc-roi-val">8 quotes</span><span>25</span></div></div>
+              <div class="wc-roi-field"><label>Avg Quote Value</label><input type="range" id="wc-r-val" min="2000" max="50000" step="500" value="8500" oninput="wcCalcROI()"/><div class="wc-roi-vals"><span>$2K</span><span id="wc-r-val-v" class="wc-roi-val">$8,500</span><span>$50K</span></div></div>
+              <div class="wc-roi-field"><label>% of Quotes Discounted Below Floor</label><input type="range" id="wc-r-pct" min="5" max="50" value="20" oninput="wcCalcROI()"/><div class="wc-roi-vals"><span>5%</span><span id="wc-r-pct-v" class="wc-roi-val">20%</span><span>50%</span></div></div>
+              <div class="wc-roi-field"><label>Avg Discount Depth (% points below floor)</label><input type="range" id="wc-r-depth" min="1" max="15" value="5" oninput="wcCalcROI()"/><div class="wc-roi-vals"><span>1%</span><span id="wc-r-depth-v" class="wc-roi-val">5 pts</span><span>15%</span></div></div>
+            </div>
+            <div class="wc-roi-results">
+              <div class="wc-roi-rc"><span class="wc-roi-rl">Annual Revenue at Risk</span><div class="wc-roi-rv" id="wc-r-rev">$0</div><div class="wc-roi-rs">Total value sold below governance floor</div></div>
+              <div class="wc-roi-rc"><span class="wc-roi-rl">Annual Margin Loss</span><div class="wc-roi-rv" style="color:#EF4444" id="wc-r-loss">$0</div><div class="wc-roi-rs">Lost gross profit from uncontrolled discounting</div></div>
+              <div class="wc-roi-rc" style="border-color:rgba(20,184,166,.3);background:rgba(20,184,166,.05)"><span class="wc-roi-rl">WindowCalc Annual Value</span><div class="wc-roi-rv" style="color:#14B8A6" id="wc-r-wc">$0</div><div class="wc-roi-rs">Recoverable margin (70% capture rate assumed)</div></div>
+              <div class="wc-roi-rc"><span class="wc-roi-rl">Payback Period</span><div class="wc-roi-rv" id="wc-r-pb">—</div><div class="wc-roi-rs">Based on Professional plan at $349/mo</div></div>
+              <a href="#wc-demo" class="wc-btn-primary" style="justify-content:center;margin-top:8px;">Lock In These Margins →</a>
+              <p style="font-size:.75rem;color:#4a6080;margin-top:12px;font-style:italic;">Illustrative estimates only. Actual results vary.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── COMPARISON TABLE ────────────────────────────────── -->
+    <section class="wc-section wc-section-mid">
+      <div class="wc-container">
+        <div class="wc-section-header wc-center">
+          <span class="wc-label">Why WindowCalc</span>
+          <h2 class="wc-h2">How we stack up against the alternatives</h2>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="wc-comp-table">
+            <thead><tr>
+              <th>Capability</th>
+              <th class="wc-wc-col">WindowCalc</th>
+              <th>Spreadsheets</th>
+              <th>Generic CRM</th>
+              <th>Generic Quote Tool</th>
+            </tr></thead>
+            <tbody>
+              <tr><td class="wc-feat-col">Impact window &amp; door specific</td><td class="wc-wc-col"><span style="color:#10B981">✓ Built for it</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td></tr>
+              <tr><td class="wc-feat-col">Real-time margin governance</td><td class="wc-wc-col"><span style="color:#10B981">✓ Hard-enforced</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#F59E0B">~ Manual</span></td></tr>
+              <tr><td class="wc-feat-col">Three-tier approval workflow</td><td class="wc-wc-col"><span style="color:#10B981">✓ Automatic</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#F59E0B">~ Basic</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td></tr>
+              <tr><td class="wc-feat-col">DP rating &amp; NOA compliance</td><td class="wc-wc-col"><span style="color:#10B981">✓ Per-opening</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td></tr>
+              <tr><td class="wc-feat-col">HVHZ zone validation</td><td class="wc-wc-col"><span style="color:#10B981">✓</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td></tr>
+              <tr><td class="wc-feat-col">CPA-ready audit trail</td><td class="wc-wc-col"><span style="color:#10B981">✓ Immutable</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#F59E0B">~ Basic logs</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td></tr>
+              <tr><td class="wc-feat-col">Gross margin vs markup distinction</td><td class="wc-wc-col"><span style="color:#10B981">✓ Both shown</span></td><td><span style="color:#F59E0B">~ If you build it</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#F59E0B">~ Varies</span></td></tr>
+              <tr><td class="wc-feat-col">AI pricing from your own data</td><td class="wc-wc-col"><span style="color:#10B981">✓ AI Studio</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td></tr>
+              <tr><td class="wc-feat-col">Revenue recognition staging</td><td class="wc-wc-col"><span style="color:#10B981">✓ ASC 606 mapped</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#F59E0B">~ Some</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td></tr>
+              <tr><td class="wc-feat-col">Cost data hidden from reps (API)</td><td class="wc-wc-col"><span style="color:#10B981">✓ Server-enforced</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td><td><span style="color:#EF4444;opacity:.5">✗</span></td></tr>
+              <tr><td class="wc-feat-col">Setup time</td><td class="wc-wc-col"><span style="color:#10B981">Days</span></td><td><span style="color:#EF4444;opacity:.5">Weeks</span></td><td><span style="color:#EF4444;opacity:.5">Months</span></td><td><span style="color:#F59E0B">Weeks</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PRICING ─────────────────────────────────────────── -->
+    <section class="wc-section" id="wc-pricing">
+      <div class="wc-container">
+        <div class="wc-section-header wc-center">
+          <span class="wc-label">Pricing</span>
+          <h2 class="wc-h2">The only platform purpose-built for HVHZ dealers</h2>
+          <p class="wc-body-lg">Not generic quoting software. Not adapted from another industry. Purpose-built for impact window and door dealers — with the compliance logic, CPA controls, and governance enforcement that no generic tool offers.</p>
+          <!-- Billing toggle -->
+          <div class="wc-billing-toggle" id="wc-billing-toggle">
+            <button class="wc-bill-btn active" onclick="wcSetBilling('monthly',this)">Monthly</button>
+            <button class="wc-bill-btn" onclick="wcSetBilling('annual',this)">Annual <span class="wc-save-badge">Save 2 Months</span></button>
+          </div>
+        </div>
+        <div class="wc-pricing-grid">
+
+          <!-- STARTER -->
+          <div class="wc-pricing-card">
+            <div class="wc-pricing-tier">Starter</div>
+            <h3 class="wc-pricing-name">For Small Teams</h3>
+            <div class="wc-pricing-target">Owner-operator to 5-rep shop</div>
+            <div class="wc-pricing-price">
+              <span class="wc-pricing-amt" data-monthly="$149" data-annual="$124">$149</span>
+              <span class="wc-pricing-period">/mo</span>
+            </div>
+            <div class="wc-pricing-note" data-monthly="Billed monthly" data-annual="Billed annually ($1,490/yr)">Billed monthly</div>
+            <div class="wc-per-seat">+$49/mo per additional user</div>
+            <ul class="wc-pricing-feats">
+              <li>Full quoting engine with real-time pricing</li>
+              <li>Three-tier margin governance</li>
+              <li>Approval workflow with named authorization</li>
+              <li>Field App — all reps, all devices</li>
+              <li>NOA &amp; DP compliance validation</li>
+              <li>County property enrichment (Broward, Miami-Dade, Palm Beach)</li>
+              <li>Core reports — Pipeline, Margin, Approvals</li>
+              <li>Up to 5 users included</li>
+            </ul>
+            <a href="#wc-demo" class="wc-btn-secondary" style="width:100%;justify-content:center;display:flex;">Get Started</a>
+            <div class="wc-onboard-note">Onboarding package available — ask during demo</div>
+          </div>
+
+          <!-- PROFESSIONAL (most popular) -->
+          <div class="wc-pricing-card wc-pricing-popular">
+            <div class="wc-popular-badge">Most Popular</div>
+            <div class="wc-pricing-tier">Professional</div>
+            <h3 class="wc-pricing-name">For Growing Dealers</h3>
+            <div class="wc-pricing-target">Active sales team, 6–20 reps</div>
+            <div class="wc-pricing-price">
+              <span class="wc-pricing-amt" data-monthly="$349" data-annual="$291">$349</span>
+              <span class="wc-pricing-period">/mo</span>
+            </div>
+            <div class="wc-pricing-note" data-monthly="Billed monthly" data-annual="Billed annually ($3,490/yr)">Billed monthly</div>
+            <div class="wc-per-seat">+$75/mo per additional user</div>
+            <ul class="wc-pricing-feats">
+              <li>Everything in Starter</li>
+              <li>AI Pricing Studio &amp; Pricing Intelligence Console</li>
+              <li>Rep performance leaderboard &amp; margin trend reports</li>
+              <li>Lead Tracker CRM panel</li>
+              <li>Job Hub — two-way SMS, photos, file attachments</li>
+              <li>Branded proposal templates</li>
+              <li>Up to 20 users included</li>
+              <li>Priority support queue</li>
+            </ul>
+            <a href="#wc-demo" class="wc-btn-primary" style="width:100%;justify-content:center;">Request Demo</a>
+            <div class="wc-onboard-note">Onboarding package available — ask during demo</div>
+          </div>
+
+          <!-- ENTERPRISE -->
+          <div class="wc-pricing-card">
+            <div class="wc-pricing-tier">Enterprise</div>
+            <h3 class="wc-pricing-name">For Large Operations</h3>
+            <div class="wc-pricing-target">Multi-location, 21+ reps</div>
+            <div class="wc-pricing-price">
+              <span class="wc-pricing-amt" data-monthly="$749" data-annual="$624">$749</span>
+              <span class="wc-pricing-period">/mo</span>
+            </div>
+            <div class="wc-pricing-note" data-monthly="Billed monthly" data-annual="Billed annually ($7,490/yr)">Billed monthly</div>
+            <div class="wc-per-seat" style="color:#14B8A6;font-weight:700;">Unlimited users included</div>
+            <ul class="wc-pricing-feats">
+              <li>Everything in Professional</li>
+              <li>White-label dealer branding</li>
+              <li>API access for integrations &amp; webhooks</li>
+              <li>Multi-location management</li>
+              <li>Dedicated onboarding &amp; live training session</li>
+              <li>SLA-backed support response</li>
+              <li>Early access to all new features</li>
+              <li>Custom contract available</li>
+            </ul>
+            <a href="#wc-demo" class="wc-btn-secondary" style="width:100%;justify-content:center;display:flex;">Contact Sales</a>
+            <div class="wc-onboard-note">White-glove onboarding included</div>
+          </div>
+
+        </div>
+        <div style="text-align:center;margin-top:28px;color:#4a6080;font-size:.875rem;">
+          All plans include a 30-day free trial. No credit card required.
+          Annual billing locks in current rates — prices may adjust for new customers in Year 2.
+        </div>
+      </div>
+    </section>
+
+    <!-- ── LEAD FORM ───────────────────────────────────────── -->
+    <section class="wc-section wc-section-mid" id="wc-demo">
+      <div class="wc-container">
+        <div class="wc-lead-grid">
+          <div class="wc-lead-pitch">
+            <span class="wc-label">Request a Demo</span>
+            <h2 class="wc-h2">See WindowCalc in your operation in 30 minutes</h2>
+            <p style="margin-bottom:28px;color:#94a3b8;font-size:1rem;">We'll walk you through a live demo configured for your team size, show you how governance enforcement works, and give you a real ROI estimate based on your numbers. No slides. No pressure.</p>
+            <div class="wc-value-list">
+              <div class="wc-value-item"><div class="wc-value-icon">🎯</div><div><h4>Configured for your team</h4><p style="font-size:.875rem;">We set up a demo tenant with your product lines before the call.</p></div></div>
+              <div class="wc-value-item"><div class="wc-value-icon">💰</div><div><h4>Real ROI estimate</h4><p style="font-size:.875rem;">We calculate your actual margin recovery potential based on your numbers.</p></div></div>
+              <div class="wc-value-item"><div class="wc-value-icon">⚡</div><div><h4>Same-day onboarding available</h4><p style="font-size:.875rem;">Beta partners can be live with a governed catalog in under 48 hours.</p></div></div>
+              <div class="wc-value-item"><div class="wc-value-icon">🔐</div><div><h4>CPA briefing available</h4><p style="font-size:.875rem;">We'll do a separate 20-min call with your accountant covering internal controls.</p></div></div>
+            </div>
+          </div>
+          <div class="wc-lead-form">
+            <h3>Request Your Demo</h3>
+            <p style="font-size:.875rem;color:#94a3b8;margin-bottom:24px;">Fill out the form and we'll reach out within 1 business day.</p>
+            <form id="wc-lead-form" onsubmit="wcSubmitLead(event)">
+              <div class="wc-form-row">
+                <div class="wc-form-group"><label>First Name *</label><input class="wc-form-input" type="text" id="wc-f-first" placeholder="John" required/></div>
+                <div class="wc-form-group"><label>Last Name *</label><input class="wc-form-input" type="text" id="wc-f-last" placeholder="Smith" required/></div>
+              </div>
+              <div class="wc-form-group"><label>Work Email *</label><input class="wc-form-input" type="email" id="wc-f-email" placeholder="john@yourcompany.com" required/></div>
+              <div class="wc-form-group"><label>Company Name *</label><input class="wc-form-input" type="text" id="wc-f-company" placeholder="South Florida Impact Windows LLC" required/></div>
+              <div class="wc-form-group"><label>Phone Number</label><input class="wc-form-input" type="tel" id="wc-f-phone" placeholder="(954) 555-0100"/></div>
+              <div class="wc-form-row">
+                <div class="wc-form-group"><label>Number of Sales Reps *</label>
+                  <select class="wc-form-input" id="wc-f-size" required>
+                    <option value="">Select...</option>
+                    <option>1–3 reps</option><option>4–7 reps</option>
+                    <option>8–15 reps</option><option>16–30 reps</option><option>30+ reps</option>
+                  </select>
+                </div>
+                <div class="wc-form-group"><label>Monthly Quote Volume</label>
+                  <select class="wc-form-input" id="wc-f-volume">
+                    <option value="">Select...</option>
+                    <option>Under 20/mo</option><option>20–50/mo</option>
+                    <option>50–100/mo</option><option>100+/mo</option>
+                  </select>
+                </div>
+              </div>
+              <div class="wc-form-group"><label>Biggest Pricing Challenge</label>
+                <select class="wc-form-input" id="wc-f-challenge">
+                  <option value="">Select...</option>
+                  <option>Reps discounting too aggressively</option>
+                  <option>No visibility into field pricing decisions</option>
+                  <option>Manual spreadsheet quoting is error-prone</option>
+                  <option>No approval workflow for exceptions</option>
+                  <option>Need CPA-ready financial controls</option>
+                  <option>All of the above</option>
+                </select>
+              </div>
+              <div class="wc-form-group"><label>How Did You Hear About WindowCalc?</label>
+                <select class="wc-form-input" id="wc-f-source">
+                  <option value="">Select...</option>
+                  <option>Google Search</option><option>Industry referral</option>
+                  <option>Trade show</option><option>Social media</option>
+                  <option>Direct outreach</option><option>Other</option>
+                </select>
+              </div>
+              <button class="wc-form-submit" type="submit" id="wc-lead-submit">Request My Demo →</button>
+              <div id="wc-lead-success" style="display:none;text-align:center;padding:24px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;margin-top:12px;">
+                <div style="font-size:1.5rem;margin-bottom:8px">🎉</div>
+                <div style="font-weight:700;color:#fff;margin-bottom:6px">You're on the list!</div>
+                <div style="font-size:.875rem;color:#94a3b8">We'll reach out within 1 business day to schedule your demo.</div>
+              </div>
+              <div style="font-size:.75rem;color:#4a6080;text-align:center;margin-top:12px;">Your information is kept strictly confidential. No spam. No third-party sharing.</div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FOOTER ──────────────────────────────────────────── -->
+    <footer class="wc-footer">
+      <div class="wc-container">
+        <div class="wc-footer-grid">
+          <div class="wc-footer-brand">
+            <div class="wc-footer-logo">Window<span>Calc</span></div>
+            <p>The pricing brain for impact window and door dealers. Free and open source - take it and build on it.</p>
+            <div style="margin-top:16px;font-size:.8rem;color:#4a6080;">
+              <div>Alpha 9.4e · Schema v17 · Multi-Tenant</div>
+            </div>
+          </div>
+          <div class="wc-footer-nav">
+            <h4>Platform</h4>
+            <ul>
+              <li><a href="#wc-features">Quote Engine</a></li>
+              <li><a href="#wc-governance">Governance</a></li>
+              <li><a href="#wc-features">AI Pricing Studio</a></li>
+              <li><a href="#wc-features">Reports &amp; Analytics</a></li>
+            </ul>
+          </div>
+          <div class="wc-footer-nav">
+            <h4>For Your Team</h4>
+            <ul>
+              <li><a href="#wc-cpa">For CPAs &amp; Accountants</a></li>
+              <li><a href="#wc-pricing">For Owners</a></li>
+              <li><a href="#wc-features">For Sales Managers</a></li>
+              <li><a href="#wc-features">For Sales Reps</a></li>
+            </ul>
+          </div>
+          <div class="wc-footer-nav">
+            <h4>Company</h4>
+            <ul>
+              <li><a href="#wc-demo">Request Demo</a></li>
+              <li><a href="#" onclick="showLoginFromMarketing();return false;">Sign In</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="wc-footer-bottom">
+          <p>WindowCalc · Public domain (The Unlicense) · Free to use, change and ship</p>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- end #marketing-landing -->
+
+  <!-- Library Browser Modal -->
+  <div id="library-browser-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeLibraryBrowser()">
+    <div class="modal-panel" style="max-width:860px;width:95vw;max-height:88vh;overflow-y:auto;">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Browse Product Library</h2>
+          <p style="font-size:.875rem;color:var(--text-muted);margin-top:4px;">Products shared to your account. Add them to your catalog to start quoting.</p>
+        </div>
+        <button class="modal-close" onclick="closeLibraryBrowser()">✕</button>
+      </div>
+      <div style="padding:16px 24px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <select class="filter-select" id="lib-filter-mfr" onchange="filterLibrary()"><option value="">All Manufacturers</option></select>
+          <select class="filter-select" id="lib-filter-type" onchange="filterLibrary()">
+            <option value="">All Types</option>
+            <option value="single_hung">Single Hung</option>
+            <option value="horizontal_roller">Horizontal Roller</option>
+            <option value="fixed">Fixed Window</option>
+            <option value="casement">Casement</option>
+            <option value="sliding_glass_door">Sliding Glass Door</option>
+            <option value="entry_door">Entry Door</option>
+            <option value="french_door">French Door</option>
+          </select>
+          <input type="search" class="form-input" id="lib-search" placeholder="Search…" oninput="filterLibrary()" style="max-width:200px;"/>
+        </div>
+      </div>
+      <div id="library-browser-list" style="padding:20px 24px;"></div>
+    </div>
+  </div>
+
+  <!-- ==================== FIELD APP ==================== -->
+  <div id="field-app" class="app-shell hidden">
+    <!-- STICKY MARGIN RIBBON (hidden by default) -->
+    <div id="margin-ribbon" class="margin-ribbon hidden">
+      <div class="ribbon-left">
+        <span class="ribbon-status-dot"></span>
+        <span class="ribbon-label">MARGIN</span>
+        <span class="ribbon-margin-pct mono">?%</span>
+      </div>
+      <div class="ribbon-center">
+        <span class="ribbon-customer" id="ribbon-customer"></span>
+      </div>
+      <div class="ribbon-right">
+        <span class="ribbon-label">TOTAL</span>
+        <span class="ribbon-total mono">$?</span>
+        <span id="ribbon-headroom" class="ribbon-headroom"></span>
+      </div>
+    </div>
+
+    <div id="field-screen-container">
+      <!-- All field screens rendered here by JS -->
+    </div>
+  </div>
+
+  <!-- QUOTE DETAIL MODAL (Admin) -->
+  <div id="quote-modal" class="modal-overlay hidden">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-quote-title">Quote Detail</h2>
+        <button class="modal-close" id="modal-close-btn">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <div class="loading-state"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEYBOARD SHORTCUTS OVERLAY -->
+  <div id="shortcut-overlay" class="shortcut-overlay hidden">
+    <div class="modal-panel" style="max-width:540px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Keyboard Shortcuts</h2>
+        <button class="modal-close" onclick="document.getElementById('shortcut-overlay').classList.add('hidden')">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-grid">
+          <!-- General -->
+          <div class="shortcut-section-title" style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-top:8px;">Navigation</div>
+          <div class="shortcut-item"><span class="shortcut-key">D</span> Dashboard</div>
+          <div class="shortcut-item"><span class="shortcut-key">O</span> Reports</div>
+          <div class="shortcut-item"><span class="shortcut-key">P</span> Products</div>
+          <div class="shortcut-item"><span class="shortcut-key">A</span> Approvals</div>
+          <div class="shortcut-item"><span class="shortcut-key">G</span> Governance</div>
+          <div class="shortcut-item"><span class="shortcut-key">L</span> Audit Log</div>
+          <div class="shortcut-item"><span class="shortcut-key">F</span> Field App</div>
+          <div class="shortcut-section-title" style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-top:12px;">Actions</div>
+          <div class="shortcut-item"><span class="shortcut-key">N</span> New Quote</div>
+          <div class="shortcut-item"><span class="shortcut-key">⌘</span><span class="shortcut-key">K</span> Command Palette</div>
+          <div class="shortcut-item"><span class="shortcut-key">?</span> Show Shortcuts</div>
+          <div class="shortcut-item"><span class="shortcut-key">T</span> Toggle Theme</div>
+          <div class="shortcut-item"><span class="shortcut-key">R</span> Refresh Data</div>
+          <div class="shortcut-item"><span class="shortcut-key">Esc</span> Close Modal</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMAND PALETTE -->
+  <div id="command-palette" class="command-palette hidden">
+    <div class="palette-inner">
+      <div class="palette-search-wrap">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="var(--text-muted)"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+        <input type="text" id="palette-search" class="palette-search" placeholder="Type a command…" autocomplete="off" />
+      </div>
+      <div id="palette-results" class="palette-results"></div>
+    </div>
+  </div>
+
+    <div id="permissions-modal" class="modal-overlay hidden">
+    <div class="modal-panel" style="max-width:760px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="perms-modal-title">Edit Permissions</h2>
+        <button class="modal-close" id="perms-modal-close">x</button>
+      </div>
+      <div class="modal-body">
+        <div id="perms-role-bar" class="perm-role-bar"></div>
+        <div id="permissions-grid" class="permissions-grid"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+          <button class="btn btn-ghost" id="perms-cancel-btn" type="button">Cancel</button>
+          <button class="btn btn-primary" id="perms-save-btn" type="button">Save Permissions</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="password-modal" class="modal-overlay hidden">
+    <div class="modal-panel" style="max-width:520px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Change Password</h2>
+        <button class="modal-close" id="password-modal-close">x</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="cp-current">Current Password</label>
+          <input id="cp-current" class="form-input" type="password" autocomplete="current-password" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cp-next">New Password</label>
+          <input id="cp-next" class="form-input" type="password" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="cp-confirm">Confirm New Password</label>
+          <input id="cp-confirm" class="form-input" type="password" autocomplete="new-password" />
+        </div>
+        <div id="cp-error" style="color:var(--red);font-size:12px;min-height:18px;"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button class="btn btn-ghost" id="cp-cancel-btn" type="button">Cancel</button>
+          <button class="btn btn-primary" id="cp-save-btn" type="button">Update Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="job-hub-overlay" class="job-hub-overlay hidden" onclick="closeJobHub()"></div>
+  <aside id="job-hub" aria-label="Job discussion hub">
+    <div class="hub-header">
+      <div class="hub-title-wrap">
+        <div class="hub-title">Job Discussion Hub</div>
+        <div id="hub-quote-meta" class="hub-quote-meta">Internal notes stay inside WindowCalc for your team.</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="hub-ai-btn" onclick="openAIPanel()" title="AI Assistant" style="display:none;">✦</button>
+        <button class="btn btn-ghost hub-close" type="button" onclick="closeJobHub()">✕</button>
+      </div>
+    </div>
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-hubtab="messages" onclick="switchHubTab('messages')">Messages</button>
+      <button class="hub-tab" data-hubtab="files" onclick="switchHubTab('files')">Files</button>
+    </div>
+    <div id="hub-tab-messages" class="hub-tab-content">
+      <div id="hub-messages-list" class="hub-messages"></div>
+      <div class="hub-input-area">
+        <div class="hub-composer">
+          <div class="hub-channel-row">
+            <div class="hub-channel-group">
+              <label class="hub-channel-label" for="hub-channel-select">Send as</label>
+              <select id="hub-channel-select" class="hub-channel-select" onchange="handleHubChannelChange()">
+                <option value="in_app">Internal Note</option>
+                <option value="sms">Text Customer (SMS/MMS)</option>
+              </select>
+            </div>
+            <div id="hub-channel-hint" class="hub-channel-hint">Internal notes stay inside WindowCalc for your team.</div>
+          </div>
+          <div id="hub-sms-templates-row" class="hidden" style="margin-bottom:6px;">
+            <button class="btn btn-ghost btn-sm" type="button" onclick="toggleTemplatesPopover()">📋 Templates</button>
+            <div id="templates-popover" class="templates-popover hidden"></div>
+          </div>
+          <div id="hub-attachment-preview" class="hub-attachment-preview hidden"></div>
+          <div class="hub-composer-row">
+            <input id="hub-input" class="form-input" type="text" placeholder="Add an internal note..." onkeyup="if(event.key==='Enter'){sendHubMessage()}" />
+            <input id="hub-attachment-input" type="file" accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt" class="hidden" onchange="handleHubAttachmentChange(event)" />
+            <button class="btn btn-ghost" type="button" onclick="triggerHubAttachmentPicker()">Attach</button>
+            <button class="btn btn-primary" type="button" id="hub-send-btn" onclick="sendHubMessage()">Send Note</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="hub-tab-files" class="hub-tab-content hidden">
+      <div class="hub-files-toolbar">
+        <input id="hub-file-input" type="file" class="hidden" onchange="handleQuoteFileUpload(event)" accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt" />
+        <select id="hub-file-category" class="filter-select" style="flex:1">
+          <option value="general">General</option>
+          <option value="permit">Permit</option>
+          <option value="photo">Photo</option>
+          <option value="contract">Contract</option>
+          <option value="hoa">HOA Letter</option>
+          <option value="noa_doc">NOA Document</option>
+          <option value="inspection">Inspection</option>
+          <option value="other">Other</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="triggerQuoteFilePicker()">+ Upload File</button>
+      </div>
+      <div id="hub-file-upload-progress" class="hidden" style="padding:8px 16px;">
+        <div class="progress-bar"><div id="file-upload-bar" class="progress-fill" style="width:0%"></div></div>
+        <div id="file-upload-label" style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Uploading…</div>
+      </div>
+      <div id="hub-files-list" class="hub-files-list">
+        <div class="loading-state"><div class="spinner"></div><span>Loading files…</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- BOTTOM NAVIGATION (Mobile) -->
+  <nav id="bottom-nav" class="bottom-nav">
+    <button class="bottom-nav-item active" data-tab="dashboard" onclick="mobileNavTo('dashboard')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="bottom-nav-item" data-tab="approvals" onclick="mobileNavTo('approvals')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+      <span>Approve</span>
+      <span class="bottom-nav-badge" id="mobile-approval-badge"></span>
+    </button>
+    <button class="bottom-nav-item" data-tab="reports" onclick="mobileNavTo('reports')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm2-3a1 1 0 011-1h1a1 1 0 011 1v2H5v-2zm4-4a1 1 0 011-1h1a1 1 0 011 1v6H9V9zm4-3a1 1 0 011-1h1a1 1 0 011 1v9h-3V6z"/></svg>
+      <span>Reports</span>
+    </button>
+    <button class="bottom-nav-item fab-main" onclick="mobileNavTo('field')">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span>Quote</span>
+    </button>
+    <button class="bottom-nav-item" data-tab="products" onclick="mobileNavTo('products')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+      <span>Products</span>
+    </button>
+    <button class="bottom-nav-item" data-tab="governance" onclick="mobileNavTo('governance')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="./app.js"></script>
+
+  <!-- AI ASSISTANT PANEL (Section 7B) -->
+  <div id="ai-panel-overlay" class="slide-overlay hidden" onclick="closeAIPanel()"></div>
+  <aside id="ai-assistant-panel" class="slide-panel slide-panel-right hidden" aria-label="AI Assistant">
+    <div class="slide-panel-header">
+      <div class="slide-panel-title">✦ AI Assistant</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeAIPanel()">✕</button>
+    </div>
+    <div class="slide-panel-body">
+      <p class="ai-disclaimer">⚠ AI-generated responses may contain errors. Always verify product specifications independently.</p>
+      <div class="form-group">
+        <label class="form-label" for="ai-context-select">Context</label>
+        <select id="ai-context-select" class="filter-select" style="width:100%">
+          <option value="quote">About this quote</option>
+          <option value="opening">About this opening</option>
+          <option value="governance">About governance</option>
+          <option value="general">General question</option>
+        </select>
+      </div>
+      <div id="ai-messages" class="ai-messages"></div>
+      <div class="ai-input-row">
+        <input id="ai-input" class="form-input" type="text" placeholder="Ask a question…" onkeyup="if(event.key==='Enter')sendAIMessage()" />
+        <button class="btn btn-primary" onclick="sendAIMessage()">Send</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- LIGHTBOX OVERLAY (Section 8C) -->
+  <div id="lightbox-overlay" class="lightbox-overlay hidden" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="Attachment preview" />
+  </div>
+
+  <!-- AI PRICING STUDIO MODAL (Section 5B) -->
+  <div id="ai-studio-overlay" class="modal-overlay hidden" onclick="if(event.target===this)closeAIPricingStudio()"></div>
+  <div id="ai-studio-modal" class="modal-panel ai-studio-modal hidden">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">✦ AI Pricing Studio <span class="beta-badge">Beta</span></h2>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Advisory pricing suggestions based on your historical data.</div>
+      </div>
+      <button class="modal-close" onclick="closeAIPricingStudio()">✕</button>
+    </div>
+    <div class="ai-studio-body">
+      <!-- Left: profile list -->
+      <aside class="ai-studio-sidebar">
+        <div class="ai-studio-sidebar-header">
+          <div class="ai-studio-sidebar-title">Profiles</div>
+          <button class="btn btn-primary btn-sm" onclick="openNewProfileWizard()">+ New Profile</button>
+        </div>
+        <div id="ai-studio-profile-list" class="ai-studio-profile-list">
+          <div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>
+        </div>
+      </aside>
+      <!-- Right: profile detail -->
+      <main id="ai-studio-detail" class="ai-studio-detail">
+        <div class="empty-state" style="margin:auto;">
+          <div class="empty-icon">✦</div>
+          <div>Select a profile or create one to get started.</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- NEW PROFILE WIZARD MODAL (Section 5C) -->
+  <div id="ai-wizard-overlay" class="modal-overlay hidden" onclick="if(event.target===this)closeNewProfileWizard()"></div>
+  <div id="ai-wizard-modal" class="modal-panel hidden" style="max-width:560px;">
+    <div class="modal-header">
+      <h2 class="modal-title">New AI Pricing Profile</h2>
+      <button class="modal-close" onclick="closeNewProfileWizard()">✕</button>
+    </div>
+    <div class="modal-body" id="ai-wizard-body">
+      <!-- steps rendered by JS -->
+    </div>
+  </div>
+
+  <!-- Tier 6: Customer View Overlay -->
+  <div id="customer-view-overlay" class="hidden"></div>
+
+</body>
+</html>

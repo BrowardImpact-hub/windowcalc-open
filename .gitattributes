@@ -1,0 +1,30 @@
+# Normalise line endings so a Windows edit does not show up as "every line
+# changed" in Cloud Shell, Docker, GitHub Actions, or on another machine.
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.py   text eol=lf
+*.js   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.md   text eol=lf
+
+# Windows-only files that must keep CRLF.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary. Never diffed, never converted.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.pdf   binary
+*.docx  binary
+*.xlsx  binary
+*.zip   binary

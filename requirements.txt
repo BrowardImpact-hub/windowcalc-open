@@ -1,0 +1,8 @@
+flask==3.1.0
+gunicorn==23.0.0
+google-cloud-storage>=3.1.0,<4
+google-crc32c>=1.6.0,<2
+itsdangerous==2.2.0
+pg8000==1.31.5
+twilio>=9.8.3,<10
+anthropic>=0.25.0
